@@ -1,0 +1,42 @@
+.masonry-container {
+  width: 100%;
+}
+
+.masonry-item {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.masonry-item-img {
+  position: relative;
+}
+
+.masonry-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 15px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.masonry-item:hover .masonry-overlay {
+  opacity: 1;
+}
+
+.masonry-title {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.masonry-price {
+  color: rgba(255,255,255,0.8);
+  font-size: 12px;
+  margin: 0;
+}

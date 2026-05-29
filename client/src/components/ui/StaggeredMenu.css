@@ -1,0 +1,78 @@
+.sm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  font-family: 'Inter', sans-serif;
+}
+
+.sm-layer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: clamp(280px, 40vw, 440px);
+  height: 100%;
+}
+
+.sm-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: clamp(280px, 40vw, 440px);
+  height: 100%;
+  background: #fff;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  padding: 3rem 2rem;
+  overflow-y: auto;
+}
+
+.sm-close {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  font-size: 2.5rem;
+  cursor: pointer;
+  color: #000;
+  line-height: 1;
+  padding: 0;
+  margin-bottom: 3rem;
+}
+
+.sm-close:hover {
+  color: #666;
+}
+
+.sm-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+}
+
+.sm-item-wrap {
+  overflow: hidden;
+}
+
+.sm-item {
+  display: inline-block;
+  color: #000;
+  font-weight: 700;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  text-decoration: none;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  transition: color 0.3s;
+}
+
+.sm-item:hover {
+  color: var(--accent, #5227FF);
+}
+
+@media (max-width: 640px) {
+  .sm-layer,
+  .sm-panel {
+    width: 100%;
+  }
+}
