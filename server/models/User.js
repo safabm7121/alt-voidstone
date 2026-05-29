@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false },
   verificationCode: String,
   resetPasswordCode: String,
-  resetPasswordExpires: Date
+  resetPasswordExpires: Number
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);
