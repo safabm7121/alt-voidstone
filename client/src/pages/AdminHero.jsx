@@ -21,9 +21,7 @@ const AdminHero = () => {
 
   if (!user || user.email !== 'voidstonestudio@gmail.com') return <Navigate to="/" />;
 
-  useEffect(() => {
-    fetchHero();
-  }, []);
+  useEffect(() => { fetchHero(); }, []);
 
   const fetchHero = async () => {
     try {
@@ -34,9 +32,7 @@ const AdminHero = () => {
         setSubtitle(res.data.hero.subtitle || '');
         setButtonText(res.data.hero.buttonText || '');
       }
-    } catch (err) {
-      console.error('Error fetching hero:', err);
-    }
+    } catch (err) { console.error('Error fetching hero:', err); }
   };
 
   const handleFileChange = (e) => {
@@ -52,10 +48,7 @@ const AdminHero = () => {
   };
 
   const handleUrlPreview = () => {
-    if (mediaUrl.trim()) {
-      setMediaFile(null);
-      setPreview(mediaUrl);
-    }
+    if (mediaUrl.trim()) { setMediaFile(null); setPreview(mediaUrl); }
   };
 
   const readFileAsBase64 = (file) => {
@@ -73,47 +66,30 @@ const AdminHero = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      // Upload media first if there is one
       if (mediaFile) {
         const { imageData, imageType, fileSize } = await readFileAsBase64(mediaFile);
         await api.post('/hero/upload', { imageData, imageType, fileSize });
       } else if (mediaUrl && preview) {
         const isVideo = /\.(mp4|webm|ogg|mov|avi|mkv)/i.test(mediaUrl);
-        await api.post('/hero/upload', {
-          mediaUrl,
-          imageType: isVideo ? 'video/mp4' : 'image/jpeg',
-          fileSize: 0
-        });
+        await api.post('/hero/upload', { mediaUrl, imageType: isVideo ? 'video/mp4' : 'image/jpeg', fileSize: 0 });
       }
-
-      // Save text
       await api.put('/hero/text', { title, subtitle, buttonText });
-      
       toast.success('Hero updated successfully!');
       navigate('/');
     } catch (err) {
-      console.error('Update error:', err);
       toast.error(err.response?.data?.error || 'Failed to update hero');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   const handleDelete = async () => {
     if (window.confirm('Delete hero media? This cannot be undone.')) {
       try {
         await api.delete('/hero/image');
-        setHero(null);
-        setPreview(null);
-        setMediaFile(null);
-        setMediaUrl('');
+        setHero(null); setPreview(null); setMediaFile(null); setMediaUrl('');
         toast.success('Hero media deleted');
         navigate('/');
-      } catch (err) {
-        toast.error('Failed to delete hero media');
-      }
+      } catch (err) { toast.error('Failed to delete hero media'); }
     }
   };
 
@@ -130,19 +106,22 @@ const AdminHero = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-[#0a0a0a] py-12 relative">
+      <div className="fixed inset-0 opacity-[0.02] pointer-events-none z-10"
+        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.7\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'1\'/%3E%3C/svg%3E")' }}
+      />
+      
+      <div className="max-w-4xl mx-auto px-4 relative z-20">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-4xl font-bold">Edit Hero Section</h1>
-            <button onClick={() => navigate('/')} className="text-gray-500 hover:text-gray-700 transition">← Back to site</button>
+            <h1 className="text-4xl font-black uppercase tracking-tighter text-white">Edit Hero Section</h1>
+            <button onClick={() => navigate('/')} className="text-gray-500 hover:text-[#ff6b35] transition font-mono text-sm">← Back to site</button>
           </div>
 
-          {/* Current Hero Preview */}
           {hero && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 mb-8 shadow-lg">
-              <h2 className="text-lg font-semibold mb-4">Current Hero</h2>
-              <div className="relative rounded-xl overflow-hidden h-64">
+            <div className="border border-gray-800 bg-[#0f0f0f] p-6 mb-8">
+              <h2 className="text-lg font-black text-white mb-4 uppercase tracking-tighter">Current Hero</h2>
+              <div className="relative overflow-hidden h-64 border border-gray-800">
                 {hero.mediaCategory === 'video' ? (
                   <video src={getMediaSrc(hero)} className="w-full h-full object-cover" muted autoPlay loop />
                 ) : (
@@ -150,94 +129,89 @@ const AdminHero = () => {
                 )}
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                   <div className="text-center text-white">
-                    <p className="text-2xl font-bold">{hero.title}</p>
-                    <p className="text-sm opacity-80">{hero.subtitle}</p>
+                    <p className="text-2xl font-black uppercase">{hero.title}</p>
+                    <p className="text-sm font-mono text-gray-300">{hero.subtitle}</p>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Edit Form */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
+          <div className="border border-gray-800 bg-[#0f0f0f] p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title</label>
+                <label className="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Title</label>
                 <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="VOIDSTONE STUDIO"
-                  className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white" />
+                  className="w-full p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subtitle</label>
+                <label className="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Subtitle</label>
                 <input type="text" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="Handcrafted maximalism..."
-                  className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white" />
+                  className="w-full p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Button Text</label>
+                <label className="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Button Text</label>
                 <input type="text" value={buttonText} onChange={(e) => setButtonText(e.target.value)} placeholder="Explore Collection"
-                  className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white" />
+                  className="w-full p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" />
               </div>
 
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold mb-4">Hero Media</h3>
-                
+              <div className="border-t border-gray-800 pt-6">
+                <h3 className="text-lg font-black text-white mb-4 uppercase tracking-tighter">Hero Media</h3>
                 <div className="flex gap-2 mb-6">
                   <button type="button" onClick={() => setTab('upload')}
-                    className={`px-4 py-2 rounded-lg transition ${tab === 'upload' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                    className={`px-4 py-2 font-mono text-xs uppercase tracking-wider transition border ${tab === 'upload' ? 'bg-[#ff6b35] text-black border-[#ff6b35]' : 'border-gray-800 text-gray-400 hover:border-[#ff6b35] hover:text-[#ff6b35]'}`}>
                     <FiUpload className="inline mr-2" />Upload File
                   </button>
                   <button type="button" onClick={() => setTab('url')}
-                    className={`px-4 py-2 rounded-lg transition ${tab === 'url' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                    className={`px-4 py-2 font-mono text-xs uppercase tracking-wider transition border ${tab === 'url' ? 'bg-[#ff6b35] text-black border-[#ff6b35]' : 'border-gray-800 text-gray-400 hover:border-[#ff6b35] hover:text-[#ff6b35]'}`}>
                     <FiLink className="inline mr-2" />URL
                   </button>
                 </div>
 
                 {tab === 'upload' ? (
-                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-purple-500 transition cursor-pointer">
+                  <div className="border-2 border-dashed border-gray-800 p-8 text-center hover:border-[#ff6b35] transition cursor-pointer">
                     <input type="file" accept="image/*,video/*" onChange={handleFileChange} className="hidden" id="hero-media-upload" />
                     <label htmlFor="hero-media-upload" className="cursor-pointer">
-                      <FiUpload className="mx-auto text-4xl text-gray-400 mb-3" />
-                      <p className="text-gray-500">Click to upload or drag and drop</p>
-                      <p className="text-sm text-gray-400 mt-1">Images: JPG, PNG, WebP, GIF | Videos: MP4, WebM, OGG, MOV, AVI, MKV</p>
-                      <p className="text-sm text-gray-400">Max: 50MB (images) / 200MB (videos)</p>
+                      <FiUpload className="mx-auto text-4xl text-gray-500 mb-3" />
+                      <p className="text-gray-500 font-mono text-sm">Click to upload or drag and drop</p>
+                      <p className="text-xs text-gray-600 font-mono mt-1">Images: JPG, PNG, WebP, GIF | Videos: MP4, WebM</p>
+                      <p className="text-xs text-gray-600 font-mono">Max: 50MB (images) / 200MB (videos)</p>
                     </label>
                   </div>
                 ) : (
                   <div className="flex gap-2">
                     <input type="text" value={mediaUrl} onChange={(e) => setMediaUrl(e.target.value)}
                       placeholder="https://example.com/hero-image.jpg or .mp4"
-                      className="flex-1 px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white" />
+                      className="flex-1 p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" />
                     <button type="button" onClick={handleUrlPreview}
-                      className="px-6 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 transition">Preview</button>
+                      className="px-6 py-3 border border-gray-800 text-gray-400 font-mono text-sm hover:border-[#ff6b35] hover:text-[#ff6b35] transition">Preview</button>
                   </div>
                 )}
               </div>
 
-              {/* Preview */}
               {preview && (
                 <div className="mt-6">
-                  <h4 className="text-sm font-medium mb-2">Preview</h4>
-                  <div className="relative rounded-xl overflow-hidden max-h-80">
+                  <h4 className="text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Preview</h4>
+                  <div className="relative overflow-hidden max-h-80 border border-gray-800">
                     {isVideo(mediaFile, mediaUrl) ? (
-                      <video src={preview} controls className="w-full rounded-xl max-h-80" />
+                      <video src={preview} controls className="w-full max-h-80" />
                     ) : (
-                      <img src={preview} alt="Preview" className="w-full rounded-xl object-contain max-h-80 bg-gray-100 dark:bg-gray-700" />
+                      <img src={preview} alt="Preview" className="w-full object-contain max-h-80 bg-[#111]" />
                     )}
                   </div>
                 </div>
               )}
 
-              <div className="flex items-center justify-between pt-6 border-t">
+              <div className="flex items-center justify-between pt-6 border-t border-gray-800">
                 <button type="button" onClick={handleDelete}
-                  className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition">
+                  className="flex items-center gap-2 px-6 py-3 border border-red-500/30 text-red-400 font-mono text-sm uppercase tracking-wider hover:bg-red-500/10 transition">
                   <FiTrash2 />Delete Hero Media
                 </button>
                 <div className="flex gap-3">
                   <button type="button" onClick={() => navigate('/')}
-                    className="px-6 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 transition">Cancel</button>
+                    className="px-6 py-3 border border-gray-800 text-gray-400 font-mono text-sm uppercase tracking-wider hover:border-[#ff6b35] hover:text-[#ff6b35] transition">Cancel</button>
                   <button type="submit" disabled={loading}
-                    className="flex items-center gap-2 px-8 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 disabled:opacity-50 transition font-medium">
+                    className="flex items-center gap-2 px-8 py-3 bg-[#ff6b35] text-black font-black uppercase tracking-wider border-2 border-[#ff6b35] hover:bg-transparent hover:text-[#ff6b35] transition disabled:opacity-50">
                     <FiSave />{loading ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>

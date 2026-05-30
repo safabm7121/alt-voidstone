@@ -117,38 +117,39 @@ const ProductCard = ({ product, onDelete, onUpdate }) => {
 
   return (
     <>
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden break-inside-avoid transform hover:scale-[1.02] transition-all duration-300 group">
+      <div className="border border-gray-800 bg-[#0f0f0f] overflow-hidden break-inside-avoid transform hover:scale-[1.02] transition-all duration-300 group">
         <Link to={`/products/${product._id}`} className="relative block overflow-hidden">
           <img
             src={product.images?.[0] || 'https://via.placeholder.com/400'}
             alt={product.name}
             className="w-full h-auto object-cover transition duration-500 group-hover:scale-110"
           />
+          <div className="absolute inset-0 bg-[#ff6b35] opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
           {isAdmin && (
-            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition z-20">
               <button
                 onClick={(e) => { e.preventDefault(); openEdit(); }}
-                className="p-2 bg-white/90 rounded-lg hover:bg-white transition shadow"
+                className="p-2 bg-black/80 border border-gray-700 hover:border-[#ff6b35] transition"
               >
-                <FiEdit className="w-4 h-4 text-gray-700" />
+                <FiEdit className="w-4 h-4 text-white" />
               </button>
               <button
                 onClick={(e) => { e.preventDefault(); setDeleteConfirm(true); }}
-                className="p-2 bg-white/90 rounded-lg hover:bg-red-50 transition shadow"
+                className="p-2 bg-black/80 border border-gray-700 hover:border-red-500 transition"
               >
-                <FiTrash2 className="w-4 h-4 text-red-500" />
+                <FiTrash2 className="w-4 h-4 text-red-400" />
               </button>
             </div>
           )}
         </Link>
 
         <div className="p-4">
-          <h3 className="font-semibold text-lg truncate">{product.name}</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{product.category}</p>
-          <p className="text-xl font-bold mt-1">{formatDT(product.price)}</p>
+          <h3 className="font-semibold text-base truncate text-white">{product.name}</h3>
+          <p className="text-xs text-gray-500 font-mono uppercase tracking-wider">{product.category}</p>
+          <p className="text-xl font-black mt-1 text-[#ff6b35]">{formatDT(product.price)}</p>
           <button
             onClick={handleAdd}
-            className="mt-3 w-full bg-black dark:bg-white dark:text-black text-white py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition font-medium"
+            className="mt-3 w-full bg-[#ff6b35] text-black py-2 font-bold uppercase tracking-wider text-sm border border-[#ff6b35] hover:bg-transparent hover:text-[#ff6b35] transition-all duration-300"
           >
             Add to Cart
           </button>
@@ -162,54 +163,54 @@ const ProductCard = ({ product, onDelete, onUpdate }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
             onClick={() => setEditOpen(false)}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
+              className="bg-[#0f0f0f] border border-gray-800 p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Edit Product</h2>
-                <button onClick={() => setEditOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl">
-                  <FiX className="w-5 h-5" />
+                <h2 className="text-2xl font-black uppercase tracking-tighter text-white">Edit Product</h2>
+                <button onClick={() => setEditOpen(false)} className="p-2 hover:bg-[#111] transition border border-gray-800">
+                  <FiX className="w-5 h-5 text-gray-400" />
                 </button>
               </div>
 
               <div className="space-y-4">
                 <input placeholder="Product Name" value={form.name}
                   onChange={e => setForm({...form, name: e.target.value})}
-                  className="w-full p-3 border rounded-xl dark:bg-gray-700 dark:border-gray-600" />
+                  className="w-full p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" />
 
                 <textarea placeholder="Description" rows={3} value={form.description}
                   onChange={e => setForm({...form, description: e.target.value})}
-                  className="w-full p-3 border rounded-xl dark:bg-gray-700 dark:border-gray-600" />
+                  className="w-full p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" />
 
                 <div className="grid grid-cols-3 gap-3">
                   <input type="number" step="0.001" placeholder="Price" value={form.price}
                     onChange={e => setForm({...form, price: e.target.value})}
-                    className="p-3 border rounded-xl dark:bg-gray-700 dark:border-gray-600" />
+                    className="p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" />
                   <input type="number" placeholder="Stock" value={form.stock_quantity}
                     onChange={e => setForm({...form, stock_quantity: e.target.value})}
-                    className="p-3 border rounded-xl dark:bg-gray-700 dark:border-gray-600" />
+                    className="p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" />
                   <input placeholder="Designer" value={form.designer}
                     onChange={e => setForm({...form, designer: e.target.value})}
-                    className="p-3 border rounded-xl dark:bg-gray-700 dark:border-gray-600" />
+                    className="p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <select value={form.mainCategory}
                     onChange={e => setForm({...form, mainCategory: e.target.value, subCategory: ''})}
-                    className="p-3 border rounded-xl dark:bg-gray-700 dark:border-gray-600">
+                    className="p-3 bg-[#111] border border-gray-800 text-white focus:border-[#ff6b35] focus:outline-none transition font-mono">
                     {mainCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
                   {(form.mainCategory === 'Men' || form.mainCategory === 'Women') && (
                     <select value={form.subCategory}
                       onChange={e => setForm({...form, subCategory: e.target.value})}
-                      className="p-3 border rounded-xl dark:bg-gray-700 dark:border-gray-600">
+                      className="p-3 bg-[#111] border border-gray-800 text-white focus:border-[#ff6b35] focus:outline-none transition font-mono">
                       <option value="">Subcategory</option>
                       {subCategoriesByGender[form.mainCategory]?.map(sub => (
                         <option key={sub} value={sub}>{sub}</option>
@@ -218,23 +219,22 @@ const ProductCard = ({ product, onDelete, onUpdate }) => {
                   )}
                 </div>
 
-                {/* Images */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Images</label>
+                  <label className="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Images</label>
                   <div className="flex gap-2 mb-2">
                     <input placeholder="Add image URL" value={imageLinkInput}
                       onChange={e => setImageLinkInput(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addImageLink())}
-                      className="flex-1 p-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600" />
+                      className="flex-1 p-2 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono text-sm" />
                     <button type="button" onClick={addImageLink}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">
+                      className="px-4 py-2 bg-[#ff6b35] text-black hover:bg-transparent hover:text-[#ff6b35] border border-[#ff6b35] transition text-sm">
                       <FiLink className="w-4 h-4" />
                     </button>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     {images.map((img, i) => (
-                      <div key={i} className="relative group">
-                        <img src={img} alt="" className="w-full h-20 object-cover rounded-lg" />
+                      <div key={i} className="relative group border border-gray-800">
+                        <img src={img} alt="" className="w-full h-20 object-cover" />
                         <button onClick={() => removeImage(i)}
                           className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition">
                           <FiX size={12} />
@@ -244,17 +244,16 @@ const ProductCard = ({ product, onDelete, onUpdate }) => {
                   </div>
                 </div>
 
-                {/* Tags */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Tags</label>
+                  <label className="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Tags</label>
                   <input placeholder="Type tag and press Enter" value={tagInput}
                     onChange={e => setTagInput(e.target.value)} onKeyDown={addTag}
-                    className="w-full p-3 border rounded-xl dark:bg-gray-700 dark:border-gray-600" />
+                    className="w-full p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" />
                   <div className="flex flex-wrap gap-1 mt-2">
                     {tags.map(tag => (
-                      <span key={tag} className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs">
-                        {tag}
-                        <button onClick={() => removeTag(tag)}><FiX size={12} /></button>
+                      <span key={tag} className="flex items-center gap-1 bg-[#111] border border-gray-800 px-2 py-1 text-xs font-mono text-gray-300">
+                        #{tag}
+                        <button onClick={() => removeTag(tag)} className="text-gray-500 hover:text-red-400"><FiX size={12} /></button>
                       </span>
                     ))}
                   </div>
@@ -263,11 +262,11 @@ const ProductCard = ({ product, onDelete, onUpdate }) => {
 
               <div className="flex gap-3 mt-6">
                 <button onClick={() => setEditOpen(false)}
-                  className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 transition">
+                  className="flex-1 py-3 border border-gray-800 text-gray-400 font-mono uppercase tracking-wider hover:border-[#ff6b35] hover:text-[#ff6b35] transition">
                   Cancel
                 </button>
                 <button onClick={handleSave} disabled={loading}
-                  className="flex-1 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 disabled:opacity-50 transition font-medium">
+                  className="flex-1 py-3 bg-[#ff6b35] text-black font-black uppercase tracking-wider border-2 border-[#ff6b35] hover:bg-transparent hover:text-[#ff6b35] transition disabled:opacity-50">
                   {loading ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
@@ -283,26 +282,26 @@ const ProductCard = ({ product, onDelete, onUpdate }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
             onClick={() => setDeleteConfirm(false)}
           >
             <motion.div
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.9 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm text-center shadow-2xl"
+              className="bg-[#0f0f0f] border border-gray-800 p-6 w-full max-w-sm text-center"
               onClick={e => e.stopPropagation()}
             >
-              <FiTrash2 className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Delete Product?</h3>
-              <p className="text-gray-500 mb-6">"{product.name}" will be permanently deleted.</p>
+              <FiTrash2 className="w-12 h-12 text-red-400 mx-auto mb-4" />
+              <h3 className="text-lg font-black text-white mb-2">Delete Product?</h3>
+              <p className="text-gray-500 font-mono text-sm mb-6">"{product.name}" will be permanently deleted.</p>
               <div className="flex gap-3">
                 <button onClick={() => setDeleteConfirm(false)}
-                  className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 transition">
+                  className="flex-1 py-3 border border-gray-800 text-gray-400 font-mono uppercase tracking-wider hover:border-[#ff6b35] hover:text-[#ff6b35] transition">
                   Cancel
                 </button>
                 <button onClick={handleDelete}
-                  className="flex-1 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition font-medium">
+                  className="flex-1 py-3 bg-red-600 text-white font-black uppercase tracking-wider border border-red-600 hover:bg-transparent hover:text-red-400 transition">
                   Delete
                 </button>
               </div>

@@ -24,10 +24,22 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
-          <Toaster position="top-right" />
+          <Toaster 
+            position="top-right" 
+            toastOptions={{
+              duration: 1000,
+              style: {
+                background: '#1a1a1a',
+                color: '#fff',
+                border: '1px solid #333',
+                borderRadius: '12px',
+                fontSize: '14px',
+              },
+            }}
+          />
           <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Home />} />
+            <Route element={<Layout />}>
+              <Route path="/" element={<Home />} />
               <Route path="products" element={<Products />} />
               <Route path="products/:id" element={<ProductDetail />} />
               <Route path="cart" element={<Cart />} />

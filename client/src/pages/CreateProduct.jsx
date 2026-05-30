@@ -8,7 +8,6 @@ import { useDropzone } from 'react-dropzone';
 import { FiUpload, FiTrash2, FiLink, FiX } from 'react-icons/fi';
 
 const mainCategories = ['Men', 'Women', 'Art'];
-
 const subCategoriesByGender = {
   Men: ['Accessories', 'Shirts', 'T-Shirts', 'Pants', 'Jeans', 'Jackets', 'Coats', 'Bags', 'Shoes', 'Hats'],
   Women: ['Accessories', 'Shirts', 'T-Shirts', 'Pants', 'Jeans', 'Jackets', 'Coats', 'Dresses', 'Skirts', 'Bags', 'Shoes', 'Hats']
@@ -56,7 +55,6 @@ const CreateProduct = () => {
   };
 
   const removeImage = (index) => setImages(prev => prev.filter((_, i) => i !== index));
-
   const addTag = (e) => {
     if (e.key === 'Enter' && tagInput.trim()) {
       e.preventDefault();
@@ -64,7 +62,6 @@ const CreateProduct = () => {
       setTagInput('');
     }
   };
-
   const removeTag = (tag) => setTags(tags.filter(t => t !== tag));
 
   const handleSubmit = async (e) => {
@@ -85,23 +82,17 @@ const CreateProduct = () => {
     }
 
     let category = mainCategory;
-    if (mainCategory !== 'Art' && subCategory) {
-      category = `${mainCategory} ${subCategory}`;
-    }
-
-    const productData = {
-      name: form.name,
-      description: form.description,
-      price: parseFloat(form.price),
-      category,
-      designer: form.designer || 'Voidstone Studio',
-      stock_quantity: parseInt(form.stock_quantity) || 0,
-      images,
-      tags
-    };
+    if (mainCategory !== 'Art' && subCategory) category = `${mainCategory} ${subCategory}`;
 
     try {
-      await api.post('/products', productData);
+      await api.post('/products', {
+        ...form,
+        price: parseFloat(form.price),
+        stock_quantity: parseInt(form.stock_quantity) || 0,
+        category,
+        images,
+        tags
+      });
       toast.success('Product created!');
       navigate('/products');
     } catch (err) {
@@ -112,137 +103,141 @@ const CreateProduct = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-4xl font-bold mb-8">Create New Product</h1>
+    <div className="min-h-screen bg-[#0a0a0a] py-12 relative">
+      <div className="fixed inset-0 opacity-[0.02] pointer-events-none z-10"
+        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.7\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'1\'/%3E%3C/svg%3E")' }}
+      />
+      
+      <div className="max-w-3xl mx-auto px-4 relative z-20">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="text-4xl font-black uppercase tracking-tighter text-white mb-8">Create New Product</h1>
 
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6">{error}</div>
-        )}
+          {error && (
+            <div className="border border-red-500/30 text-red-400 p-4 mb-6 font-mono text-sm bg-red-500/5">{error}</div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg">
-          <div>
-            <label className="block text-sm font-medium mb-2">Product Name *</label>
-            <input required placeholder="Product name" value={form.name}
-              onChange={e => setForm({...form, name: e.target.value})}
-              className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-purple-500" />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Description *</label>
-            <textarea required placeholder="Product description" rows={4} value={form.description}
-              onChange={e => setForm({...form, description: e.target.value})}
-              className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-purple-500" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-6 border border-gray-800 bg-[#0f0f0f] p-8">
             <div>
-              <label className="block text-sm font-medium mb-2">Price (DT) *</label>
-              <input required type="number" step="0.001" placeholder="0.000" value={form.price}
-                onChange={e => setForm({...form, price: e.target.value})}
-                className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-purple-500" />
+              <label className="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Product Name *</label>
+              <input required placeholder="Product name" value={form.name}
+                onChange={e => setForm({...form, name: e.target.value})}
+                className="w-full p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Stock Quantity</label>
-              <input type="number" placeholder="0" value={form.stock_quantity}
-                onChange={e => setForm({...form, stock_quantity: e.target.value})}
-                className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-purple-500" />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Main Category *</label>
-              <select value={mainCategory} onChange={e => { setMainCategory(e.target.value); setSubCategory(''); }}
-                className="w-full p-3 border rounded-xl">
-                {mainCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-              </select>
+              <label className="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Description *</label>
+              <textarea required placeholder="Product description" rows={4} value={form.description}
+                onChange={e => setForm({...form, description: e.target.value})}
+                className="w-full p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" />
             </div>
-            {(mainCategory === 'Men' || mainCategory === 'Women') && (
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Subcategory *</label>
-                <select value={subCategory} onChange={e => setSubCategory(e.target.value)}
-                  className="w-full p-3 border rounded-xl">
-                  <option value="">Select subcategory</option>
-                  {subCategoriesByGender[mainCategory].map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                <label className="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Price (DT) *</label>
+                <input required type="number" step="0.001" placeholder="0.000" value={form.price}
+                  onChange={e => setForm({...form, price: e.target.value})}
+                  className="w-full p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" />
+              </div>
+              <div>
+                <label className="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Stock Quantity</label>
+                <input type="number" placeholder="0" value={form.stock_quantity}
+                  onChange={e => setForm({...form, stock_quantity: e.target.value})}
+                  className="w-full p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Main Category *</label>
+                <select value={mainCategory} onChange={e => { setMainCategory(e.target.value); setSubCategory(''); }}
+                  className="w-full p-3 bg-[#111] border border-gray-800 text-white focus:border-[#ff6b35] focus:outline-none transition font-mono">
+                  {mainCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
               </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Designer</label>
-            <input placeholder="Voidstone Studio" value={form.designer}
-              onChange={e => setForm({...form, designer: e.target.value})}
-              className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-purple-500" />
-          </div>
-
-          {/* Image Upload */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Images</label>
-            <div {...getRootProps()} className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition ${isDragActive ? 'border-purple-500 bg-purple-50' : 'border-gray-300 hover:border-gray-400'}`}>
-              <input {...getInputProps()} />
-              <FiUpload className="mx-auto text-3xl text-gray-400 mb-2" />
-              <p>{isDragActive ? 'Drop images here...' : 'Drag & drop images or click to select'}</p>
-              <p className="text-sm text-gray-400 mt-1">JPG, PNG, WebP up to 5MB each</p>
+              {(mainCategory === 'Men' || mainCategory === 'Women') && (
+                <div>
+                  <label className="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Subcategory *</label>
+                  <select value={subCategory} onChange={e => setSubCategory(e.target.value)}
+                    className="w-full p-3 bg-[#111] border border-gray-800 text-white focus:border-[#ff6b35] focus:outline-none transition font-mono">
+                    <option value="">Select subcategory</option>
+                    {subCategoriesByGender[mainCategory].map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                  </select>
+                </div>
+              )}
             </div>
 
-            <div className="mt-4">
-              <label className="block text-sm font-medium mb-2">Or add image URLs</label>
-              <div className="flex gap-2">
-                <textarea placeholder="https://example.com/image.jpg" rows={2} value={imageLinks}
-                  onChange={e => setImageLinks(e.target.value)}
-                  className="flex-1 p-3 border rounded-xl text-sm" />
-                <button type="button" onClick={addImageLinks}
-                  className="px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
-                  <FiLink />
-                </button>
+            <div>
+              <label className="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Designer</label>
+              <input placeholder="Voidstone Studio" value={form.designer}
+                onChange={e => setForm({...form, designer: e.target.value})}
+                className="w-full p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" />
+            </div>
+
+            <div>
+              <label className="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Images</label>
+              <div {...getRootProps()} className={`border-2 border-dashed p-8 text-center cursor-pointer transition ${isDragActive ? 'border-[#ff6b35] bg-[#ff6b35]/5' : 'border-gray-800 hover:border-gray-600'}`}>
+                <input {...getInputProps()} />
+                <FiUpload className="mx-auto text-3xl text-gray-500 mb-2" />
+                <p className="font-mono text-sm text-gray-500">{isDragActive ? 'Drop images here...' : 'Drag & drop images or click to select'}</p>
+                <p className="text-xs text-gray-600 font-mono mt-1">JPG, PNG, WebP up to 5MB each</p>
               </div>
+
+              <div className="mt-4">
+                <label className="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Or add image URLs</label>
+                <div className="flex gap-2">
+                  <textarea placeholder="https://example.com/image.jpg" rows={2} value={imageLinks}
+                    onChange={e => setImageLinks(e.target.value)}
+                    className="flex-1 p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono text-sm" />
+                  <button type="button" onClick={addImageLinks}
+                    className="px-4 py-2 border border-gray-800 text-gray-400 hover:border-[#ff6b35] hover:text-[#ff6b35] transition">
+                    <FiLink />
+                  </button>
+                </div>
+              </div>
+
+              {images.length > 0 && (
+                <div className="mt-4 grid grid-cols-4 gap-2">
+                  {images.map((img, i) => (
+                    <div key={i} className="relative group border border-gray-800">
+                      <img src={img} alt="" className="w-full h-24 object-cover" />
+                      <button type="button" onClick={() => removeImage(i)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition">
+                        <FiTrash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {images.length > 0 && (
-              <div className="mt-4 grid grid-cols-4 gap-2">
-                {images.map((img, i) => (
-                  <div key={i} className="relative group">
-                    <img src={img} alt="" className="w-full h-24 object-cover rounded-lg" />
-                    <button type="button" onClick={() => removeImage(i)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition">
-                      <FiTrash2 size={14} />
-                    </button>
-                  </div>
+            <div>
+              <label className="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Tags</label>
+              <input placeholder="Type tag and press Enter" value={tagInput}
+                onChange={e => setTagInput(e.target.value)} onKeyDown={addTag}
+                className="w-full p-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" />
+              <div className="flex flex-wrap gap-2 mt-2">
+                {tags.map(tag => (
+                  <span key={tag} className="flex items-center gap-1 bg-[#111] border border-gray-800 px-3 py-1 text-xs font-mono text-gray-300">
+                    #{tag}
+                    <button type="button" onClick={() => removeTag(tag)} className="text-gray-500 hover:text-red-400"><FiX size={14} /></button>
+                  </span>
                 ))}
               </div>
-            )}
-          </div>
-
-          {/* Tags */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Tags</label>
-            <input placeholder="Type tag and press Enter" value={tagInput}
-              onChange={e => setTagInput(e.target.value)} onKeyDown={addTag}
-              className="w-full p-3 border rounded-xl" />
-            <div className="flex flex-wrap gap-2 mt-2">
-              {tags.map(tag => (
-                <span key={tag} className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full text-sm">
-                  {tag}
-                  <button type="button" onClick={() => removeTag(tag)}><FiX size={14} /></button>
-                </span>
-              ))}
             </div>
-          </div>
 
-          <div className="flex gap-3 pt-4">
-            <button type="button" onClick={() => navigate('/products')}
-              className="px-6 py-3 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
-              Cancel
-            </button>
-            <button type="submit" disabled={loading}
-              className="flex-1 bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700 disabled:opacity-50 transition font-medium">
-              {loading ? 'Creating...' : 'Create Product'}
-            </button>
-          </div>
-        </form>
-      </motion.div>
+            <div className="flex gap-3 pt-4 border-t border-gray-800">
+              <button type="button" onClick={() => navigate('/products')}
+                className="px-6 py-3 border border-gray-800 text-gray-400 font-mono uppercase tracking-wider hover:border-[#ff6b35] hover:text-[#ff6b35] transition">
+                Cancel
+              </button>
+              <button type="submit" disabled={loading}
+                className="flex-1 bg-[#ff6b35] text-black py-3 font-black uppercase tracking-wider border-2 border-[#ff6b35] hover:bg-transparent hover:text-[#ff6b35] transition disabled:opacity-50">
+                {loading ? 'Creating...' : 'Create Product'}
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </div>
     </div>
   );
 };
