@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import Layout from './components/layout/Layout';
@@ -17,7 +18,29 @@ import CreateProduct from './pages/CreateProduct';
 import AdminHero from './pages/AdminHero';
 import Contact from './pages/Contact';
 import { Toaster } from 'react-hot-toast';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './index.css';
+
+gsap.registerPlugin(ScrollTrigger);
+
+// Component to clean up GSAP/ScrollTrigger on route changes
+const ScrollTriggerCleanup = () => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    // Kill all ScrollTriggers when navigating away
+    ScrollTrigger.getAll().forEach(trigger => {
+      if (trigger && typeof trigger.kill === 'function') {
+        trigger.kill();
+      }
+    });
+    // Refresh ScrollTrigger to clean up any remaining references
+    ScrollTrigger.refresh();
+  }, [location]);
+  
+  return null;
+};
 
 function App() {
   return (
@@ -37,6 +60,7 @@ function App() {
               },
             }}
           />
+          <ScrollTriggerCleanup />
           <Routes>
             <Route element={<Layout />}>
               <Route path="/" element={<Home />} />

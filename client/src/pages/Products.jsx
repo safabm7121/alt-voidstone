@@ -1,4 +1,6 @@
+// src/pages/Products.jsx
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +10,7 @@ import { FiSearch, FiSliders, FiX, FiGrid, FiLayers } from 'react-icons/fi';
 
 const Products = () => {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState('');
@@ -32,6 +35,18 @@ const Products = () => {
     });
   }, []);
 
+  // Listen to URL parameter changes
+  useEffect(() => {
+    const category = searchParams.get('category');
+    console.log('Category from URL:', category); // Debug log
+    if (category && mainCategories.includes(category)) {
+      setMainCategory(category);
+      setSubCategory(''); // Reset subcategory when main category changes
+    } else if (!category) {
+      setMainCategory('All');
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     filterAndSort();
   }, [products, search, mainCategory, subCategory, priceRange, sortBy]);
@@ -54,7 +69,7 @@ const Products = () => {
       } else if (subCategory) {
         result = result.filter(p => p.category === `${mainCategory} ${subCategory}`);
       } else {
-        result = result.filter(p => p.category.startsWith(mainCategory + ' '));
+        result = result.filter(p => p.category && p.category.startsWith(mainCategory + ' '));
       }
     }
 
@@ -82,7 +97,6 @@ const Products = () => {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Title */}
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -91,7 +105,6 @@ const Products = () => {
           {t('products.title')}
         </motion.h1>
 
-        {/* Filter Bar */}
         <div className="bg-[#0f0f0f] border border-gray-800 p-6 mb-8">
           <div className="flex flex-wrap gap-4 items-center justify-between">
             <div className="flex-grow max-w-md relative">
@@ -198,12 +211,10 @@ const Products = () => {
           </AnimatePresence>
         </div>
 
-        {/* Results count */}
         <p className="text-gray-500 font-mono text-sm mb-4">
           {filtered.length} {t('products.productsFound')}
         </p>
 
-        {/* Products Grid */}
         {filtered.length > 0 ? (
           <MasonryGrid products={filtered} />
         ) : (

@@ -1,6 +1,8 @@
+// src/components/ui/FloatingPolaroidGallery.jsx
 import { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useAuth } from '../../context/AuthContext';
 import { FiStar, FiX } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
@@ -14,6 +16,7 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [selectedForHighlight, setSelectedForHighlight] = useState([]);
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isAdmin = user?.email === 'voidstonestudio@gmail.com' || user?.role === 'admin';
 
   useEffect(() => {
@@ -27,14 +30,26 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
   const otherProducts = products.filter(p => !highlightedIds.includes(p._id));
   const displayProducts = [...highlightedProducts, ...otherProducts].slice(0, 5);
 
-  // Clamp a value between min and max
   const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+
+  const handleProductClick = (productId) => {
+    // Kill all GSAP animations before navigation
+    floatingTweensRef.current.forEach(t => {
+      if (t && typeof t.kill === 'function') t.kill();
+    });
+    ScrollTrigger.getAll().forEach(trigger => {
+      if (trigger && typeof trigger.kill === 'function') trigger.kill();
+    });
+    // Navigate to product detail
+    navigate(`/products/${productId}`);
+    window.scrollTo(0, 0);
+  };
 
   useEffect(() => {
     if (!containerRef.current || displayProducts.length === 0) return;
 
     // Kill old floating tweens
-    floatingTweensRef.current.forEach(t => t.kill());
+    floatingTweensRef.current.forEach(t => t && t.kill());
     floatingTweensRef.current = [];
 
     const cards = cardsRef.current.filter(Boolean);
@@ -43,11 +58,9 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
     const containerHeight = container.offsetHeight;
 
     cards.forEach((card, i) => {
-      // Get card dimensions
       const cardWidth = i === 2 ? 220 : 180;
-      const cardHeight = cardWidth * 1.6; // approximate including padding
+      const cardHeight = cardWidth * 1.6;
 
-      // Calculate bounds based on position
       const positions = [
         { top: '10%', left: '5%' },
         { top: '5%', right: '8%' },
@@ -57,7 +70,6 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
       ];
       const pos = positions[i];
       
-      // Calculate starting positions in pixels
       let startX, startY;
       if (pos.left === '50%') {
         startX = containerWidth / 2 - cardWidth / 2;
@@ -73,17 +85,14 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
         startY = containerHeight * 0.9 - cardHeight;
       }
 
-      // Calculate max movement bounds (keep card fully visible with 20px padding)
       const maxMoveX = Math.min(startX - 20, containerWidth - startX - cardWidth - 20);
       const maxMoveY = Math.min(startY - 20, containerHeight - startY - cardHeight - 20);
       const safeMoveX = Math.max(0, maxMoveX);
       const safeMoveY = Math.max(0, maxMoveY);
 
-      // Set initial position
       gsap.set(card, { x: 0, y: 0, rotation: (Math.random() - 0.5) * 12, opacity: 0 });
       gsap.to(card, { opacity: 1, duration: 0.8, delay: i * 0.15, ease: 'power3.out' });
 
-      // Gentle floating - clamped
       const floatX = clamp((Math.random() - 0.5) * 30, -safeMoveX, safeMoveX);
       const floatY = clamp((Math.random() - 0.5) * 30, -safeMoveY, safeMoveY);
       
@@ -100,7 +109,6 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
       floatingTweensRef.current.push(tween);
     });
 
-    // Mouse parallax - tightly clamped
     const handleMouseMove = (e) => {
       const rect = container.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
@@ -112,12 +120,10 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
         const cardWidth = i === 2 ? 220 : 180;
         const cardHeight = cardWidth * 1.6;
         
-        // Get card's current position
         const cardRect = card.getBoundingClientRect();
         const cardX = cardRect.left - rect.left;
         const cardY = cardRect.top - rect.top;
         
-        // Calculate safe movement range
         const maxRight = rect.width - cardX - cardWidth - 10;
         const maxLeft = cardX - 10;
         const maxDown = rect.height - cardY - cardHeight - 10;
@@ -127,7 +133,6 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
         let moveX = (mouseX - centerX) * depth;
         let moveY = (mouseY - centerY) * depth;
         
-        // Clamp to keep card fully visible
         moveX = clamp(moveX, -maxLeft, maxRight);
         moveY = clamp(moveY, -maxUp, maxDown);
         
@@ -142,9 +147,10 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
     };
 
     window.addEventListener('mousemove', handleMouseMove);
+    
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      floatingTweensRef.current.forEach(t => t.kill());
+      floatingTweensRef.current.forEach(t => t && t.kill());
     };
   }, [displayProducts]);
 
@@ -262,19 +268,25 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
 
       <div ref={containerRef} className="relative w-full h-[600px] flex items-center justify-center overflow-hidden">
         {displayProducts.map((product, i) => (
-          <Link to={`/products/${product._id}`} key={product._id}
+          <div
+            key={product._id}
             ref={el => cardsRef.current[i] = el}
+            onClick={() => handleProductClick(product._id)}
             className="absolute group cursor-pointer"
             style={{ ...positions[i], width: i === 2 ? '220px' : '180px', zIndex: i === 2 ? 10 : highlightedIds.includes(product._id) ? 5 : 1 }}
             onMouseEnter={() => handleMouseEnter(product, i)}
-            onMouseLeave={() => handleMouseLeave(product)}>
+            onMouseLeave={() => handleMouseLeave(product)}
+          >
             <div className="bg-white p-3 pb-10 shadow-xl rotate-[-2deg] group-hover:rotate-0 group-hover:scale-110 group-hover:z-20 transition-all duration-500 relative">
               {highlightedIds.includes(product._id) && (
-                <div className="absolute -top-1 -right-1 z-10 bg-purple-600 text-white rounded-full p-0.5 shadow"><FiStar className="w-3 h-3" /></div>
+                <div className="absolute -top-1 -right-1 z-10 bg-red-600 text-white rounded-full p-0.5 shadow"><FiStar className="w-3 h-3" /></div>
               )}
               <div className="w-full aspect-[3/4] overflow-hidden bg-gray-100">
-                <img src={product.images?.[0] || 'https://via.placeholder.com/400x500'} alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img 
+                  src={product.images?.[0] || 'https://via.placeholder.com/400x500'} 
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                />
               </div>
               <div className="absolute bottom-3 left-0 right-0 text-center">
                 <p className="text-xs font-medium text-gray-700 truncate px-2">{product.name}</p>
@@ -282,7 +294,7 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
               </div>
               <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-10 h-3 bg-yellow-100/80 rotate-[-3deg] rounded-sm" />
             </div>
-          </Link>
+          </div>
         ))}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
           <p className="text-8xl font-bold text-gray-100 dark:text-gray-800 select-none opacity-20">VOIDSTONE</p>
