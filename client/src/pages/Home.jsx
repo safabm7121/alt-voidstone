@@ -8,6 +8,7 @@ import ElasticSlider from '../components/ui/ElasticSlider';
 import FloatingPolaroidGallery from '../components/ui/FloatingPolaroidGallery';
 import ScrambledText from '../components/ui/ScrambledText';
 import FlowingRibbons from '../components/ui/FlowingRibbons';
+import { gsap } from 'gsap';
 
 const VolumeOffIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -22,23 +23,37 @@ const VolumeUpIcon = () => (
   </svg>
 );
 
+function separateWordsAndLetters(text) {
+  if (!text) return '';
+  let words = text.split(/\s+/);
+  let result = "";
+  for (let i = 0; i < words.length; i++) {
+    let word = words[i];
+    result += "<span class='word'>";
+    for (let j = 0; j < word.length; j++) {
+      result += "<span class='letter'>" + word[j] + "</span>";
+    }
+    result += "</span> ";
+  }
+  return result;
+}
+
 const Home = () => {
   const { user } = useAuth();
   const [hero, setHero] = useState(null);
   const [products, setProducts] = useState([]);
-  const [volume, setVolume] = useState(() => {
-    const saved = sessionStorage.getItem('heroVolume');
-    return saved ? parseInt(saved) : 0;
-  });
-  const [muted, setMuted] = useState(() => {
-    const saved = sessionStorage.getItem('heroMuted');
-    return saved ? saved === 'true' : true;
-  });
-  const [videoLoaded, setVideoLoaded] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(() => {
-    return sessionStorage.getItem('heroInteracted') === 'true';
-  });
+  const [volume, setVolume] = useState(() => parseInt(sessionStorage.getItem('heroVolume')) || 0);
+  const [muted, setMuted] = useState(() => sessionStorage.getItem('heroMuted') !== 'false');
+  const [hasInteracted, setHasInteracted] = useState(() => sessionStorage.getItem('heroInteracted') === 'true');
+  const [introDone, setIntroDone] = useState(false);
+  const [scrambleReady, setScrambleReady] = useState(false);
   const videoRef = useRef(null);
+  const introRef = useRef(null);
+  const introRedRef = useRef(null);
+  const voidstoneAnimRef = useRef(null);
+  const voidstoneScrambleRef = useRef(null);
+  const cursorRef = useRef(null);
+  const heroSectionRef = useRef(null);
   const isAdmin = user?.email === 'voidstonestudio@gmail.com' || user?.role === 'admin';
 
   useEffect(() => {
@@ -55,30 +70,100 @@ const Home = () => {
     try {
       const res = await api.get('/hero/active');
       setHero(res.data.hero);
-    } catch (err) {
-      console.error('Error fetching hero:', err);
-    }
+    } catch (err) { console.error('Error fetching hero:', err); }
   };
+
+  // Intro animation
+  useEffect(() => {
+    if (!introRef.current || !introRedRef.current) return;
+    const introTL = gsap.timeline({ onComplete: () => setIntroDone(true) });
+    const fonts = ["Anton", "Jost", "Alkatra", "Nova Oval", "Oswald", "PT Serif", "Lexend", "Poppins", "Titillium Web"];
+    fonts.forEach(font => introTL.to(introRef.current, 0.1, { fontFamily: font }));
+    introTL.to(introRef.current, 1, { scaleY: 0, ease: "expo.inOut" });
+    introTL.to(introRedRef.current, 1, { scaleY: 2, ease: "expo.inOut" }, "-=1.25");
+  }, []);
+
+  // VOIDSTONE letter animation + instant swap to ScrambledText
+  useEffect(() => {
+    if (!introDone) return;
+    if (!voidstoneAnimRef.current) return;
+
+    const text = 'VOIDSTONE';
+    voidstoneAnimRef.current.innerHTML = '';
+
+    const solidH1 = document.createElement('h1');
+    solidH1.className = 'inline-block text-[12vw] md:text-[15vw] font-black uppercase tracking-[-0.5vw] leading-[0.8] overflow-hidden';
+    solidH1.style.fontFamily = "'Bebas Neue', sans-serif";
+    solidH1.innerHTML = separateWordsAndLetters(text);
+    voidstoneAnimRef.current.appendChild(solidH1);
+
+    const strokeDiv = document.createElement('div');
+    strokeDiv.className = 'absolute top-0 left-0 text-[12vw] md:text-[15vw] font-black uppercase tracking-[-0.5vw] leading-[0.8] text-transparent overflow-hidden pointer-events-none';
+    strokeDiv.style.fontFamily = "'Bebas Neue', sans-serif";
+    strokeDiv.style.WebkitTextStroke = '1px rgba(255,255,255,0.5)';
+    strokeDiv.innerHTML = separateWordsAndLetters(text);
+    voidstoneAnimRef.current.appendChild(strokeDiv);
+
+    const letters = solidH1.querySelectorAll('.letter');
+    const strokeLetters = strokeDiv.querySelectorAll('.letter');
+
+    gsap.set([letters, strokeLetters], { y: "120%", scale: -0.5 });
+
+    const tl = gsap.timeline({ 
+      delay: 0.3,
+      onComplete: () => {
+        // Instant swap - no fade gap
+        voidstoneAnimRef.current.style.display = 'none';
+        if (voidstoneScrambleRef.current) {
+          voidstoneScrambleRef.current.style.display = 'inline-block';
+          voidstoneScrambleRef.current.style.visibility = 'visible';
+          setScrambleReady(true);
+        }
+      }
+    });
+    tl.to(letters, {
+      duration: 1.5,
+      y: "10%",
+      scale: 1,
+      ease: "expo.inOut",
+      stagger: 0.025,
+    });
+    tl.to(strokeLetters, {
+      duration: 1.5,
+      y: "10%",
+      scale: 1,
+      ease: "expo.inOut",
+      stagger: 0.025,
+    }, "-=1.5");
+  }, [introDone]);
+
+  // Custom cursor
+  useEffect(() => {
+    if (!introDone) return;
+    const heroEl = heroSectionRef.current;
+    const cursor = cursorRef.current;
+    if (!heroEl || !cursor) return;
+    const move = (e) => gsap.to(cursor, { duration: 0.5, x: e.clientX, y: e.clientY, ease: "power2.out" });
+    const enter = () => gsap.to(cursor, { duration: 0.5, scale: 1, ease: "expo.inOut" });
+    const leave = () => gsap.to(cursor, { duration: 0.5, scale: 0, ease: "expo.inOut" });
+    heroEl.addEventListener("mousemove", move);
+    heroEl.addEventListener("mouseenter", enter);
+    heroEl.addEventListener("mouseleave", leave);
+    return () => {
+      heroEl.removeEventListener("mousemove", move);
+      heroEl.removeEventListener("mouseenter", enter);
+      heroEl.removeEventListener("mouseleave", leave);
+    };
+  }, [introDone]);
 
   useEffect(() => {
     if (hero?.mediaCategory === 'video' && videoRef.current) {
       const video = videoRef.current;
-      
-      if (!hasInteracted) {
-        video.muted = true;
-        video.volume = 0;
-      } else {
-        video.muted = muted;
-        video.volume = volume / 100;
-      }
-      
-      const playVideo = () => {
-        video.play().then(() => setVideoLoaded(true)).catch(() => {
-          document.addEventListener('click', () => video.play(), { once: true });
-          document.addEventListener('touchstart', () => video.play(), { once: true });
-        });
-      };
-      playVideo();
+      if (!hasInteracted) { video.muted = true; video.volume = 0; }
+      else { video.muted = muted; video.volume = volume / 100; }
+      video.play().catch(() => {
+        document.addEventListener('click', () => video.play(), { once: true });
+      });
     }
   }, [hero]);
 
@@ -86,16 +171,10 @@ const Home = () => {
     setVolume(val);
     setHasInteracted(true);
     sessionStorage.setItem('heroInteracted', 'true');
-    
     if (videoRef.current) {
       videoRef.current.volume = val / 100;
-      if (val === 0) {
-        videoRef.current.muted = true;
-        setMuted(true);
-      } else {
-        videoRef.current.muted = false;
-        setMuted(false);
-      }
+      if (val === 0) { videoRef.current.muted = true; setMuted(true); }
+      else { videoRef.current.muted = false; setMuted(false); }
     }
   };
 
@@ -106,31 +185,36 @@ const Home = () => {
       setMuted(newMuted);
       setHasInteracted(true);
       sessionStorage.setItem('heroInteracted', 'true');
-      
-      if (newMuted) {
-        setVolume(0);
-      } else {
-        setVolume(50);
-        videoRef.current.volume = 0.5;
-      }
+      if (newMuted) { setVolume(0); } else { setVolume(50); videoRef.current.volume = 0.5; }
     }
   };
 
   return (
     <>
-      {/* FlowingRibbons background */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <FlowingRibbons backgroundColor="#0a0a0a" lineColor="#ff6b35" animationSpeed={0.2} />
       </div>
 
-      {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden z-10">
+      <div className="fixed inset-0 z-[1001] pointer-events-none opacity-[0.035]" 
+        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'1\'/%3E%3C/svg%3E")' }}
+      />
+
+      {!introDone && (
+        <div ref={introRef} className="fixed inset-0 z-[1000] bg-[#0a0a0a] flex items-center justify-center text-2xl md:text-4xl font-bold text-white origin-top">
+          LOADING
+          <div ref={introRedRef} className="absolute bottom-0 left-0 w-full h-[30%] bg-[#ff6b35] text-[20vw] font-black leading-none overflow-hidden text-transparent text-center flex items-center justify-center origin-bottom scale-y-0"
+            style={{ WebkitTextStroke: '1px #1a1a1a' }}>
+            <div className="scale-x-50 scale-y-150 tracking-[-1vw]">VOIDSTONE</div>
+          </div>
+        </div>
+      )}
+
+      <section ref={heroSectionRef} className="relative h-screen flex items-center justify-center overflow-hidden z-10">
         {hero?.mediaData ? (
           hero.mediaCategory === 'video' ? (
             <video ref={videoRef} autoPlay muted={muted} loop playsInline preload="auto"
               className="absolute inset-0 w-full h-full object-cover"
-              src={hero.isUrl ? hero.mediaData : `data:${hero.mediaType};base64,${hero.mediaData}`}
-              onLoadedData={() => setVideoLoaded(true)} />
+              src={hero.isUrl ? hero.mediaData : `data:${hero.mediaType};base64,${hero.mediaData}`} />
           ) : (
             <img className="absolute inset-0 w-full h-full object-cover"
               src={hero.isUrl ? hero.mediaData : `data:${hero.mediaType};base64,${hero.mediaData}`} alt="Hero" />
@@ -139,33 +223,88 @@ const Home = () => {
         
         <div className="absolute inset-0 bg-black/50" />
         
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }} className="relative z-20 text-center text-white px-4">
-          <h1 className="text-6xl md:text-8xl font-black mb-6 tracking-tighter uppercase">
-            {hero ? (
-              <ScrambledText radius={150} duration={2} speed={0.3} scrambleChars=".:">
-                {hero.title}
-              </ScrambledText>
-            ) : (
-              'VOIDSTONE'
-            )}
-          </h1>
+        {introDone && (
+          <div className="relative z-20 text-center text-white px-4 w-full">
+            
+            {/* TITLE ROW */}
+            <div className="inline-flex items-baseline justify-center">
+              
+              {/* VOIDSTONE */}
+              <span className="relative inline-block">
+                <span ref={voidstoneAnimRef} className="relative inline-block" />
+                <span
+                  ref={voidstoneScrambleRef}
+                  className="text-[12vw] md:text-[15vw] font-black uppercase tracking-[-0.5vw] leading-[0.8]"
+                  style={{ 
+                    fontFamily: "'Bebas Neue', sans-serif", 
+                    display: 'none',
+                    transform: 'translateY(10%)',
+                  }}
+                >
+                  {scrambleReady && (
+                    <ScrambledText radius={300} duration={1.5} speed={0.3} scrambleChars=".:">
+                      VOIDSTONE
+                    </ScrambledText>
+                  )}
+                </span>
+              </span>
 
-          <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto font-light text-gray-300">
-            {hero ? (
-              <ScrambledText radius={120} duration={2} speed={0.3} scrambleChars=".:">
-                {hero.subtitle}
-              </ScrambledText>
-            ) : (
-              ''
+              {/* STUDIO */}
+              <span 
+                className="text-[5vw] md:text-[7vw] uppercase tracking-[0.1vw] leading-[0.8] ml-3 md:ml-4"
+                style={{ 
+                  fontFamily: "'Anton', sans-serif",
+                  color: 'transparent',
+                  WebkitTextStroke: '1.5px rgba(255,255,255,0.7)',
+                }}
+              >
+                {scrambleReady ? (
+                  <ScrambledText radius={200} duration={1.5} speed={0.3} scrambleChars=".:">
+                    STUDIO
+                  </ScrambledText>
+                ) : 'STUDIO'}
+              </span>
+            </div>
+
+                       {hero?.subtitle && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.8, duration: 1 }}
+                className={`text-lg md:text-2xl max-w-2xl mx-auto font-light text-gray-300 ${scrambleReady ? '-mt-4 mb-8' : 'mb-8'}`}
+              >
+                {scrambleReady ? (
+                  <ScrambledText radius={120} duration={2} speed={0.3} scrambleChars=".:">
+                    {hero.subtitle}
+                  </ScrambledText>
+                ) : hero.subtitle}
+              </motion.div>
             )}
-          </p>
-          
-          <Link to="/products" className="inline-block bg-[#ff6b35] text-black px-10 py-4 font-black text-lg uppercase tracking-[0.2em] border-2 border-[#ff6b35] hover:bg-transparent hover:text-[#ff6b35] transition-all duration-300">
-            <ScrambledText radius={80} duration={2} speed={0.3} scrambleChars=".:">
-              {hero?.buttonText || 'Explore Collection'}
-            </ScrambledText>
-          </Link>
-        </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 2.2, duration: 0.8 }}
+            >
+              <Link to="/products" className="inline-block bg-[#ff6b35] text-black px-10 py-4 font-black text-lg uppercase tracking-[0.2em] border-2 border-[#ff6b35] hover:bg-transparent hover:text-[#ff6b35] transition-all duration-300">
+                {scrambleReady ? (
+                  <ScrambledText radius={80} duration={2} speed={0.3} scrambleChars=".:">
+                    {hero?.buttonText || 'Explore Collection'}
+                  </ScrambledText>
+                ) : (hero?.buttonText || 'Explore Collection')}
+              </Link>
+            </motion.div>
+          </div>
+        )}
+
+        <div 
+          ref={cursorRef}
+          className="fixed z-[1000] top-0 left-0 w-[6vw] h-auto aspect-[10/4] pointer-events-none -translate-x-1/2 -translate-y-1/2 scale-0"
+          style={{ fontFamily: 'Anton, sans-serif', color: '#0a0a0a', fontSize: '1.5vw' }}
+        >
+          <span className="relative z-10">DRAG</span>
+          <div className="absolute inset-0 bg-[#ff6b35] rounded-full -rotate-[15deg] -z-10" />
+        </div>
 
         {hero?.mediaCategory === 'video' && (
           <div className="absolute bottom-8 right-8 z-30 flex items-center gap-3 bg-black/60 backdrop-blur-sm border border-gray-800 p-4">
@@ -181,7 +320,6 @@ const Home = () => {
         )}
       </section>
 
-      {/* Floating Polaroid Gallery */}
       {products.length > 0 && (
         <section className="relative py-20 z-10">
           <div className="max-w-7xl mx-auto px-4">
@@ -199,7 +337,6 @@ const Home = () => {
         </section>
       )}
 
-      {/* 3D Carousel Section */}
       <section className="relative py-20 z-10">
         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.8 }} className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white mb-4">Featured Pieces</h2>

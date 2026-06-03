@@ -1,3 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Jost:ital,wght@1,600&family=Alkatra&family=Lexend:wght@700&family=Nova+Oval&family=Oswald:wght@500&family=PT+Serif:wght@700&family=Titillium+Web&family=Poppins:wght@400;600;700;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+.word {
+  display: inline-flex;
+}
+
+.letter {
+  display: inline-block;
+}

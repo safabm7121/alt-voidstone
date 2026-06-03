@@ -13,6 +13,7 @@
     "@heroicons/react": "^2.2.0",
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
+    "@studio-freight/lenis": "^1.0.42",
     "axios": "^1.16.1",
     "clsx": "^2.1.1",
     "framer": "^3.0.4",
