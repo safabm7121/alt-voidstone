@@ -38,6 +38,7 @@ function separateWordsAndLetters(text) {
   return result;
 }
 
+const isMobile = () => window.matchMedia('(pointer: coarse)').matches;
 const Home = () => {
   const { user } = useAuth();
   const [hero, setHero] = useState(null);
@@ -83,7 +84,7 @@ const Home = () => {
     introTL.to(introRedRef.current, 1, { scaleY: 2, ease: "expo.inOut" }, "-=1.25");
   }, []);
 
-  // VOIDSTONE letter animation + instant swap to ScrambledText
+  // VOIDSTONE letter animation
   useEffect(() => {
     if (!introDone) return;
     if (!voidstoneAnimRef.current) return;
@@ -109,15 +110,18 @@ const Home = () => {
 
     gsap.set([letters, strokeLetters], { y: "120%", scale: -0.5 });
 
+    const mobile = isMobile();
+
     const tl = gsap.timeline({ 
       delay: 0.3,
       onComplete: () => {
-        // Instant swap - no fade gap
-        voidstoneAnimRef.current.style.display = 'none';
-        if (voidstoneScrambleRef.current) {
-          voidstoneScrambleRef.current.style.display = 'inline-block';
-          voidstoneScrambleRef.current.style.visibility = 'visible';
-          setScrambleReady(true);
+        if (!mobile) {
+          voidstoneAnimRef.current.style.display = 'none';
+          if (voidstoneScrambleRef.current) {
+            voidstoneScrambleRef.current.style.display = 'inline-block';
+            voidstoneScrambleRef.current.style.visibility = 'visible';
+            setScrambleReady(true);
+          }
         }
       }
     });
@@ -137,9 +141,9 @@ const Home = () => {
     }, "-=1.5");
   }, [introDone]);
 
-  // Custom cursor
+  // Custom cursor - desktop only
   useEffect(() => {
-    if (!introDone) return;
+    if (!introDone || isMobile()) return;
     const heroEl = heroSectionRef.current;
     const cursor = cursorRef.current;
     if (!heroEl || !cursor) return;
@@ -226,10 +230,8 @@ const Home = () => {
         {introDone && (
           <div className="relative z-20 text-center text-white px-4 w-full">
             
-            {/* TITLE ROW */}
             <div className="inline-flex items-baseline justify-center">
               
-              {/* VOIDSTONE */}
               <span className="relative inline-block">
                 <span ref={voidstoneAnimRef} className="relative inline-block" />
                 <span
@@ -239,6 +241,7 @@ const Home = () => {
                     fontFamily: "'Bebas Neue', sans-serif", 
                     display: 'none',
                     transform: 'translateY(10%)',
+                    letterSpacing: '-0.5vw',
                   }}
                 >
                   {scrambleReady && (
@@ -249,7 +252,6 @@ const Home = () => {
                 </span>
               </span>
 
-              {/* STUDIO */}
               <span 
                 className="text-[5vw] md:text-[7vw] uppercase tracking-[0.1vw] leading-[0.8] ml-3 md:ml-4"
                 style={{ 
@@ -266,7 +268,7 @@ const Home = () => {
               </span>
             </div>
 
-                       {hero?.subtitle && (
+            {hero?.subtitle && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -297,14 +299,16 @@ const Home = () => {
           </div>
         )}
 
-        <div 
-          ref={cursorRef}
-          className="fixed z-[1000] top-0 left-0 w-[6vw] h-auto aspect-[10/4] pointer-events-none -translate-x-1/2 -translate-y-1/2 scale-0"
-          style={{ fontFamily: 'Anton, sans-serif', color: '#0a0a0a', fontSize: '1.5vw' }}
-        >
-          <span className="relative z-10">DRAG</span>
-          <div className="absolute inset-0 bg-[#ff6b35] rounded-full -rotate-[15deg] -z-10" />
-        </div>
+        {!isMobile() && (
+          <div 
+            ref={cursorRef}
+            className="fixed z-[1000] top-0 left-0 w-[6vw] h-auto aspect-[10/4] pointer-events-none -translate-x-1/2 -translate-y-1/2 scale-0"
+            style={{ fontFamily: 'Anton, sans-serif', color: '#0a0a0a', fontSize: '1.5vw' }}
+          >
+            <span className="relative z-10">DRAG</span>
+            <div className="absolute inset-0 bg-[#ff6b35] rounded-full -rotate-[15deg] -z-10" />
+          </div>
+        )}
 
         {hero?.mediaCategory === 'video' && (
           <div className="absolute bottom-8 right-8 z-30 flex items-center gap-3 bg-black/60 backdrop-blur-sm border border-gray-800 p-4">
