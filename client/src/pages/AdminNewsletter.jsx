@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { toast } from 'react-hot-toast';
-import { motion } from 'framer-motion';
-import { FiSend, FiUsers, FiArrowLeft } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiSend, FiUsers, FiArrowLeft, FiX } from 'react-icons/fi';
 
 const SubscriberCount = () => {
   const [count, setCount] = useState(0);
@@ -21,18 +20,24 @@ const AdminNewsletter = () => {
   const [htmlContent, setHtmlContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const isAdmin = user?.email === 'voidstonestudio@gmail.com' || user?.role === 'admin';
   if (!isAdmin) return <Navigate to="/" />;
 
   const handleSend = async () => {
     if (!subject || !htmlContent) return toast.error('Subject and content required');
-    if (!window.confirm(`Send to ALL subscribers? This cannot be undone.`)) return;
+    setShowConfirm(true);
+  };
 
+  const confirmSend = async () => {
+    setShowConfirm(false);
     setLoading(true);
     try {
       const res = await api.post('/subscribe/send', { subject, content: htmlContent });
       toast.success(res.data.message);
+      setSubject('');
+      setHtmlContent('');
     } catch (err) {
       toast.error('Failed to send');
     } finally {
@@ -48,7 +53,7 @@ const AdminNewsletter = () => {
             <FiArrowLeft className="w-3 h-3" /> BACK TO DASHBOARD
           </Link>
 
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
             <div>
               <h1 className="text-4xl font-black uppercase tracking-tighter">Send Newsletter</h1>
               <p className="text-sm text-gray-500 font-mono mt-2">
@@ -90,7 +95,7 @@ const AdminNewsletter = () => {
                   srcDoc={htmlContent}
                   title="Preview"
                   className="w-full min-h-[600px]"
-                  sandbox="allow-same-origin"
+                  sandbox="allow-same-origin allow-scripts"
                 />
               </div>
             ) : (
@@ -118,6 +123,46 @@ const AdminNewsletter = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
+            onClick={() => setShowConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-[#0f0f0f] border border-gray-800 p-6 w-full max-w-sm text-center"
+              onClick={e => e.stopPropagation()}
+            >
+              <FiSend className="w-12 h-12 text-[#ff6b35] mx-auto mb-4" />
+              <h3 className="text-lg font-black text-white mb-2">Send Newsletter?</h3>
+              <p className="text-gray-500 font-mono text-sm mb-2">This will be sent to <SubscriberCount />.</p>
+              <p className="text-gray-600 font-mono text-xs mb-6">This cannot be undone.</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  className="flex-1 py-3 border border-gray-800 text-gray-400 font-mono uppercase tracking-wider text-sm hover:border-gray-500 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmSend}
+                  className="flex-1 py-3 bg-[#ff6b35] text-black font-black uppercase tracking-wider text-sm hover:bg-[#ff8555] transition"
+                >
+                  Send Now
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
