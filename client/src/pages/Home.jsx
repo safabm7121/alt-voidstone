@@ -13,7 +13,7 @@ import CategoryBanners from '../components/ui/CategoryBanners';
 import ZoomReveal from '../components/ui/ZoomReveal';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
+import NewsletterSignup from '../components/ui/NewsletterSignup';
 gsap.registerPlugin(ScrollTrigger);
 
 const VolumeOffIcon = () => (
@@ -310,6 +310,10 @@ useEffect(() => {
           <Link to="/products" className="inline-block px-8 py-4 border border-white text-white font-mono uppercase tracking-wider hover:bg-white hover:text-black transition-all duration-300">Shop All</Link>
         </div>
       </section>
+      
+
+<NewsletterSignup />
+
     </>
   );
 };

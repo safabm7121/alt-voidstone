@@ -15,6 +15,7 @@ const ScrambledText = ({
   children
 }) => {
   const rootRef = useRef(null);
+  const splitRef = useRef(null);
 
   useEffect(() => {
     const el = rootRef.current;
@@ -25,6 +26,7 @@ const ScrambledText = ({
       type: 'chars',
       charsClass: 'scramble-char'
     });
+    splitRef.current = split;
 
     split.chars.forEach(c => {
       const rect = c.getBoundingClientRect();
@@ -66,9 +68,15 @@ const ScrambledText = ({
 
     return () => {
       el.removeEventListener('pointermove', handleMove);
-      split.revert();
+      // Kill all GSAP tweens on split chars before reverting
+      split.chars.forEach(c => gsap.killTweensOf(c));
+      try {
+        split.revert();
+      } catch (e) {
+        // Element already removed from DOM
+      }
     };
-  }, []);
+  }, [children]);
 
   return (
     <span ref={rootRef} className={className} style={style}>

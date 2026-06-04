@@ -124,7 +124,7 @@ const ProductCard = ({ product, onDelete, onUpdate }) => {
             alt={product.name}
             className="w-full h-auto object-cover transition duration-500 group-hover:scale-110"
           />
-          <div className="absolute inset-0 bg-[#ff6b35] opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
           {isAdmin && (
             <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition z-20">
               <button

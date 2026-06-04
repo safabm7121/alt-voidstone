@@ -1,11 +1,16 @@
 import { useAuth } from '../context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiEdit, FiImage, FiPackage } from 'react-icons/fi';
+import { FiEdit, FiImage, FiPackage, FiMail } from 'react-icons/fi';
 
 const AdminDashboard = () => {
   const { user, isAuthenticated } = useAuth();
-  if (!isAuthenticated || user?.email !== 'voidstonestudio@gmail.com') return <Navigate to="/" />;
+  
+  // Check if admin
+  const isAdmin = user?.role === 'admin' || user?.email === 'voidstonestudio@gmail.com';
+  
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAdmin) return <Navigate to="/" replace />;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] py-12 relative">
@@ -46,6 +51,16 @@ const AdminDashboard = () => {
                 </div>
                 <h2 className="text-xl font-black uppercase tracking-tighter text-white mb-2">Manage Products</h2>
                 <p className="text-gray-500 font-mono text-xs">View and edit existing products</p>
+              </div>
+            </Link>
+            
+            <Link to="/admin/newsletter" className="group">
+              <div className="border border-gray-800 bg-[#0f0f0f] p-8 hover:border-[#ff6b35] transition-all duration-300 hover:-translate-y-1">
+                <div className="w-14 h-14 border border-[#ff6b35]/30 flex items-center justify-center mb-4 group-hover:border-[#ff6b35] group-hover:scale-110 transition">
+                  <FiMail className="w-7 h-7 text-[#ff6b35]" />
+                </div>
+                <h2 className="text-xl font-black uppercase tracking-tighter text-white mb-2">Newsletter</h2>
+                <p className="text-gray-500 font-mono text-xs">Send emails to subscribers</p>
               </div>
             </Link>
           </div>

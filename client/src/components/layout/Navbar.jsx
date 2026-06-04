@@ -1,3 +1,4 @@
+// client/src/components/layout/Navbar.jsx
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +7,7 @@ import { useCart } from '../../context/CartContext';
 import { motion } from 'framer-motion';
 import StaggeredMenu from '../ui/StaggeredMenu';
 import LanguageSwitcher from '../common/LanguageSwitcher';
+import { FiHeart } from 'react-icons/fi';
 
 const CartIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -29,17 +31,21 @@ const Navbar = () => {
   const isAdmin = user?.role === 'admin';
   const closeMenu = () => setMenuOpen(false);
 
-  const handleNav = (link) => {
-    closeMenu();
+const handleNav = (link) => {
+  closeMenu(); // This sets isOpen to false, triggering close animation
+  // Wait for close animation to finish before navigating
+  setTimeout(() => {
     if (link === '/logout') { logout(); navigate('/'); return; }
     navigate(link);
-  };
+  }, 400); // Matches the 0.35s close animation + buffer
+};
 
   const menuItems = [
     { label: t('nav.home'), link: '/', onClick: () => handleNav('/') },
     { label: t('nav.products'), link: '/products', onClick: () => handleNav('/products') },
     { label: t('nav.contact'), link: '/contact', onClick: () => handleNav('/contact') },
     { label: t('nav.cart'), link: '/cart', onClick: () => handleNav('/cart') },
+    { label: t('nav.wishlist'), link: '/wishlist', onClick: () => handleNav('/wishlist') },
     ...(isAdmin ? [{ label: 'Admin', link: '/admin', onClick: () => handleNav('/admin') }] : []),
     ...(isAuthenticated 
       ? [{ label: t('nav.logout'), link: '/logout', onClick: () => handleNav('/logout') }] 
@@ -63,8 +69,12 @@ const Navbar = () => {
               </motion.h1>
             </Link>
             
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-2">
               <LanguageSwitcher />
+              
+              <Link to="/wishlist" className="relative text-gray-400 hover:text-[#ff6b35] transition-colors">
+                <FiHeart className="w-5 h-5" />
+              </Link>
               
               <Link to="/cart" className="relative text-gray-400 hover:text-[#ff6b35] transition-colors">
                 <CartIcon />

@@ -6,8 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { formatDT } from '../utils/format';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { FiShoppingCart, FiMinus, FiPlus, FiX, FiHeart, FiShare2, FiTruck } from 'react-icons/fi';
+import { toast } from 'react-hot-toast';
 
-// CardRotate component - handles drag to flip
 function CardRotate({ children, onSendToBack, sensitivity = 200 }) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -38,7 +38,6 @@ function CardRotate({ children, onSendToBack, sensitivity = 200 }) {
   );
 }
 
-// Stack component - the gallery stack
 function ImageStack({ images, productName, onImageChange, externalIndex }) {
   const [stack, setStack] = useState(() => 
     images.map((src, index) => ({
@@ -48,7 +47,6 @@ function ImageStack({ images, productName, onImageChange, externalIndex }) {
     }))
   );
 
-  // Rebuild stack when images change
   useEffect(() => {
     setStack(images.map((src, index) => ({
       id: index,
@@ -57,14 +55,12 @@ function ImageStack({ images, productName, onImageChange, externalIndex }) {
     })));
   }, [images]);
 
-  // When externalIndex changes (thumbnail clicked), bring that image to top
   useEffect(() => {
     if (externalIndex !== null && externalIndex !== undefined) {
       setStack(prev => {
         const targetId = externalIndex;
         const targetIndex = prev.findIndex(card => card.id === targetId);
         if (targetIndex === -1 || targetIndex === prev.length - 1) return prev;
-        
         const newStack = [...prev];
         const [card] = newStack.splice(targetIndex, 1);
         newStack.push(card);
@@ -83,7 +79,6 @@ function ImageStack({ images, productName, onImageChange, externalIndex }) {
     });
   };
 
-  // Update parent when stack changes
   useEffect(() => {
     if (stack.length > 0) {
       onImageChange(stack[stack.length - 1].id);
@@ -95,7 +90,6 @@ function ImageStack({ images, productName, onImageChange, externalIndex }) {
       {stack.map((card, index) => {
         const isTop = index === stack.length - 1;
         const stackPosition = stack.length - index - 1;
-        
         return (
           <CardRotate
             key={card.id}
@@ -124,8 +118,6 @@ function ImageStack({ images, productName, onImageChange, externalIndex }) {
                 className="w-full h-full object-contain p-4 pointer-events-none select-none"
                 draggable={false}
               />
-              
-              {/* Corner accents only on top */}
               {isTop && (
                 <>
                   <div className="absolute top-3 left-3 w-8 h-8 border-l-2 border-t-2 border-[#ff6b35] opacity-80" />
@@ -155,6 +147,7 @@ const ProductDetail = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
   const [isHovering, setIsHovering] = useState(false);
+  const [inWishlist, setInWishlist] = useState(false);
   const containerRef = useRef(null);
 
   const isAdmin = user?.email === 'voidstonestudio@gmail.com';
@@ -163,19 +156,26 @@ const ProductDetail = () => {
     api.get(`/products/${id}`)
       .then(res => setProduct(res.data.product))
       .catch(() => navigate('/products'));
-    
-    // Fetch all products for "You May Also Like"
     api.get('/products')
       .then(res => setAllProducts(res.data.products || []))
       .catch(() => {});
   }, [id]);
 
-  // Smooth custom cursor
   useEffect(() => {
     const move = (e) => setCursorPos({ x: e.clientX, y: e.clientY });
     window.addEventListener('mousemove', move);
     return () => window.removeEventListener('mousemove', move);
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || !product) return;
+    api.get('/wishlist').then(res => {
+      const wishlist = res.data.wishlist;
+      if (wishlist?.products?.some(p => p._id === product._id)) {
+        setInWishlist(true);
+      }
+    }).catch(() => {});
+  }, [isAuthenticated, product]);
 
   if (!product) {
     return (
@@ -194,6 +194,23 @@ const ProductDetail = () => {
     addToCart({ ...product, quantity: qty });
   };
 
+  const toggleWishlist = async () => {
+    if (!isAuthenticated) { navigate('/login'); return; }
+    try {
+      if (inWishlist) {
+        await api.delete(`/wishlist/${product._id}`);
+        setInWishlist(false);
+        toast.success('Removed from wishlist');
+      } else {
+        await api.post(`/wishlist/${product._id}`);
+        setInWishlist(true);
+        toast.success('Added to wishlist');
+      }
+    } catch (err) {
+      toast.error('Failed to update wishlist');
+    }
+  };
+
   const images = product.images?.length > 0 ? product.images : ['https://via.placeholder.com/600'];
   const splitCategory = (cat) => {
     if (!cat) return { main: '', sub: '' };
@@ -202,12 +219,10 @@ const ProductDetail = () => {
   };
   const { main, sub } = splitCategory(product.category);
 
-  // Get related products (same category, exclude current)
   const relatedProducts = allProducts
     .filter(p => p._id !== product._id && p.category === product.category)
     .slice(0, 4);
 
-  // If not enough same-category, fill with random products
   if (relatedProducts.length < 4) {
     const others = allProducts
       .filter(p => p._id !== product._id && p.category !== product.category)
@@ -222,13 +237,11 @@ const ProductDetail = () => {
 
   return (
     <div ref={containerRef} className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#ff6b35] selection:text-black">
-      {/* Hide default cursor */}
       <style>{`
         body, * { cursor: none !important; }
         a, button, [role="button"] { cursor: none !important; }
       `}</style>
       
-      {/* Custom Cursor - Small dot + ring */}
       <motion.div
         className="fixed w-2 h-2 bg-[#ff6b35] rounded-full pointer-events-none z-[200]"
         style={{ top: 0, left: 0 }}
@@ -246,13 +259,11 @@ const ProductDetail = () => {
         transition={{ type: "tween", duration: 0.08 }}
       />
 
-      {/* Noise texture */}
       <div className="fixed inset-0 opacity-[0.02] pointer-events-none z-10"
         style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.7\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'1\'/%3E%3C/svg%3E")' }}
       />
 
       <div className="max-w-[1600px] mx-auto px-6 lg:px-12 py-8 relative z-20">
-        {/* Breadcrumbs */}
         <motion.nav
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -267,7 +278,6 @@ const ProductDetail = () => {
         </motion.nav>
 
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
-          {/* LEFT - Image Stack */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -283,14 +293,11 @@ const ProductDetail = () => {
                 onImageChange={setCurrentImage}
                 externalIndex={thumbnailIndex}
               />
-              
-              {/* Counter */}
               <div className="absolute bottom-4 right-4 bg-black/80 border border-gray-800 px-3 py-1.5 text-xs font-mono text-gray-400 z-30 pointer-events-none">
                 {currentImage + 1} / {images.length}
               </div>
             </div>
 
-            {/* Thumbnails */}
             {images.length > 1 && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -318,7 +325,6 @@ const ProductDetail = () => {
             )}
           </motion.div>
 
-          {/* RIGHT - Product Info */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -326,7 +332,6 @@ const ProductDetail = () => {
             className="lg:w-[45%]"
           >
             <div className="lg:sticky lg:top-24">
-              {/* Category Tag */}
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -343,7 +348,6 @@ const ProductDetail = () => {
                 )}
               </motion.div>
 
-              {/* Product Name */}
               <motion.h1 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -353,7 +357,6 @@ const ProductDetail = () => {
                 {product.name}
               </motion.h1>
               
-              {/* Designer Credit */}
               <motion.p 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -363,7 +366,6 @@ const ProductDetail = () => {
                 DESIGN BY <span className="text-gray-300">{product.designer || 'VOIDSTONE STUDIO'}</span>
               </motion.p>
 
-              {/* Price */}
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -378,7 +380,6 @@ const ProductDetail = () => {
                 </div>
               </motion.div>
 
-              {/* Description */}
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -389,7 +390,6 @@ const ProductDetail = () => {
                 <p className="text-gray-400 leading-relaxed font-light">{product.description}</p>
               </motion.div>
 
-              {/* Stock Status */}
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -413,7 +413,6 @@ const ProductDetail = () => {
                 )}
               </motion.div>
 
-              {/* Quantity Selector */}
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -442,7 +441,6 @@ const ProductDetail = () => {
                 </div>
               </motion.div>
 
-              {/* Action Buttons */}
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -464,13 +462,18 @@ const ProductDetail = () => {
 
                 <div className="flex gap-3">
                   <motion.button 
-                    className="flex-1 py-4 border border-gray-800 font-mono text-sm uppercase tracking-wider hover:border-[#ff6b35] hover:text-[#ff6b35] transition-all duration-300"
+                    onClick={toggleWishlist}
+                    className={`flex-1 py-4 border font-mono text-sm uppercase tracking-wider transition-all duration-300 ${
+                      inWishlist 
+                        ? 'border-[#ff6b35] text-[#ff6b35] bg-[#ff6b35]/5' 
+                        : 'border-gray-800 text-gray-400 hover:border-[#ff6b35] hover:text-[#ff6b35]'
+                    }`}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <span className="flex items-center justify-center gap-2">
-                      <FiHeart className="w-4 h-4" />
-                      WISHLIST
+                      <FiHeart className={`w-4 h-4 ${inWishlist ? 'fill-[#ff6b35]' : ''}`} />
+                      {inWishlist ? 'WISHLISTED' : 'WISHLIST'}
                     </span>
                   </motion.button>
                   <motion.button 
@@ -486,7 +489,6 @@ const ProductDetail = () => {
                 </div>
               </motion.div>
 
-              {/* Shipping Info */}
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -500,7 +502,6 @@ const ProductDetail = () => {
                 </div>
               </motion.div>
 
-              {/* Tags */}
               {product.tags?.length > 0 && (
                 <motion.div 
                   initial={{ opacity: 0 }}
@@ -523,10 +524,8 @@ const ProductDetail = () => {
                 </motion.div>
               )}
 
-              {/* SKU */}
               <p className="text-xs font-mono text-gray-600">SKU: #{product._id?.slice(-8).toUpperCase()}</p>
 
-              {/* Login Prompt */}
               {!isAuthenticated && (
                 <motion.p 
                   initial={{ opacity: 0 }}
@@ -538,7 +537,6 @@ const ProductDetail = () => {
                 </motion.p>
               )}
 
-              {/* Admin Edit */}
               {isAdmin && (
                 <Link to={`/admin/create-product?id=${product._id}`} 
                   className="block text-center text-sm text-[#ff6b35] hover:underline mt-4 font-mono uppercase tracking-wider">
@@ -549,7 +547,6 @@ const ProductDetail = () => {
           </motion.div>
         </div>
 
-        {/* YOU MAY ALSO LIKE Section */}
         {relatedProducts.length > 0 && (
           <motion.section
             initial={{ opacity: 0, y: 50 }}
@@ -596,7 +593,6 @@ const ProductDetail = () => {
         )}
       </div>
 
-      {/* Lightbox */}
       <AnimatePresence>
         {lightboxOpen && (
           <motion.div 
@@ -614,7 +610,6 @@ const ProductDetail = () => {
             >
               <FiX className="w-6 h-6" />
             </motion.button>
-            
             <AnimatePresence mode="wait">
               <motion.img 
                 key={currentImage}
@@ -628,7 +623,6 @@ const ProductDetail = () => {
                 onClick={(e) => e.stopPropagation()} 
               />
             </AnimatePresence>
-
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 font-mono text-sm text-gray-500">
               {currentImage + 1} / {images.length}
             </div>

@@ -7,7 +7,8 @@
     "login": "Login",
     "register": "Register",
     "logout": "Logout",
-    "brand": "VOIDSTONE"
+    "brand": "VOIDSTONE",
+    "wishlist": "Wishlist"
   },
   "home": {
     "title": "VOIDSTONE",

@@ -9,7 +9,9 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Fetch user on mount and when token changes
   useEffect(() => {
     if (token) {
       api.get('/auth/me')
@@ -17,17 +19,22 @@ export const AuthProvider = ({ children }) => {
         .catch(() => {
           localStorage.removeItem('token');
           setToken(null);
-        });
+          setUser(null);
+        })
+        .finally(() => setIsLoading(false));
+    } else {
+      setUser(null);
+      setIsLoading(false);
     }
   }, [token]);
 
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
-    const { token, user } = res.data;
-    localStorage.setItem('token', token);
-    setToken(token);
-    setUser(user);
-    toast.success(`Welcome back, ${user.firstName}!`);
+    const { token: newToken, user: userData } = res.data;
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
+    setUser(userData); // SET USER IMMEDIATELY, don't wait for useEffect
+    toast.success(`Welcome back, ${userData.firstName}!`);
   };
 
   const register = async (data) => {
@@ -44,7 +51,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      login, 
+      register, 
+      logout, 
+      isAuthenticated: !!token && !!user,
+      isLoading 
+    }}>
       {children}
     </AuthContext.Provider>
   );

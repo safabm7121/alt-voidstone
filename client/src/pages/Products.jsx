@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { formatDT } from '../utils/format';
 import MasonryGrid from '../components/products/MasonryGrid';
 import { FiSearch, FiSliders, FiX, FiGrid, FiLayers } from 'react-icons/fi';
-
+import Navbar from '../components/layout/Navbar';
 const Products = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
@@ -95,7 +95,9 @@ const Products = () => {
   };
 
   return (
+
     <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <Navbar />
       <div className="max-w-7xl mx-auto px-4 py-12">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}

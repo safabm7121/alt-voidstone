@@ -24,19 +24,18 @@ const Register = () => {
     return () => window.removeEventListener('mousemove', move);
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await register(form);
-      navigate('/verify-email', { state: { email: form.email } });
-    } catch (err) {
-      setError(err.response?.data?.error || t('auth.registerFailed'));
-    } finally {
-      setLoading(false);
-    }
-  };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+  setLoading(true);
+  try {
+    await register(form);
+    window.location.href = '/verify-email';
+  } catch (err) {
+    setError(err.response?.data?.error || t('auth.registerFailed'));
+    setLoading(false);
+  }
+};
 
   const handleCardMove = (e) => {
     const card = cardRef.current;

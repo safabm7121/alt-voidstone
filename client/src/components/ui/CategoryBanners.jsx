@@ -1,9 +1,10 @@
-// src/components/ui/CategoryBanners.jsx
+// client/src/components/ui/CategoryBanners.jsx
 import { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useAuth } from '../../context/AuthContext';
+import { api } from '../../services/api';
 import { FiEdit, FiX, FiSave, FiArrowRight } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 
@@ -19,16 +20,15 @@ const CategoryBanners = ({ products = [] }) => {
   const scrollTriggerRef = useRef(null);
   const animationRef = useRef(null);
 
-  const getSaved = (cat) => localStorage.getItem(`cat_banner_${cat}`);
   const getProductImg = (cat) => {
     const p = products.find(x => x.category?.startsWith(cat));
     return p?.images?.[0] || '';
   };
 
   const [banners, setBanners] = useState({
-    Men: getSaved('Men') || getProductImg('Men'),
-    Women: getSaved('Women') || getProductImg('Women'),
-    Art: getSaved('Art') || getProductImg('Art'),
+    Men: getProductImg('Men'),
+    Women: getProductImg('Women'),
+    Art: getProductImg('Art'),
   });
   const [editing, setEditing] = useState(null);
   const [editUrl, setEditUrl] = useState('');
@@ -40,18 +40,39 @@ const CategoryBanners = ({ products = [] }) => {
     { n: 'Art', l: '/products?category=Art', desc: 'Wearable Canvas' }
   ];
 
+  // Fetch saved banners from database
+  useEffect(() => {
+    api.get('/settings').then(res => {
+      if (res.data.settings?.categoryBanners) {
+        const db = res.data.settings.categoryBanners;
+        setBanners(prev => ({
+          Men: db.Men || prev.Men,
+          Women: db.Women || prev.Women,
+          Art: db.Art || prev.Art,
+        }));
+      }
+    }).catch(() => {});
+  }, []);
+
   const catProducts = (cat) => cat === 'Art'
     ? products.filter(p => p.category === 'Art')
     : products.filter(p => p.category?.startsWith(cat));
 
   const open = (cat) => { setEditing(cat); setEditUrl(banners[cat]); setSelProd(''); };
-  const save = () => {
+
+  const save = async () => {
     const u = selProd || editUrl;
-    setBanners(p => ({ ...p, [editing]: u }));
-    localStorage.setItem(`cat_banner_${editing}`, u);
+    const updated = { ...banners, [editing]: u };
+    setBanners(updated);
     setEditing(null);
-    toast.success(`${editing} updated`);
+    try {
+      await api.put('/settings', { categoryBanners: updated });
+      toast.success(`${editing} updated`);
+    } catch (err) {
+      toast.error('Failed to save');
+    }
   };
+
   const pick = (id) => {
     const p = products.find(x => x._id === id);
     if (p?.images?.[0]) {
@@ -70,7 +91,6 @@ const CategoryBanners = ({ products = [] }) => {
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
 
-    // Kill existing ScrollTrigger if any
     if (scrollTriggerRef.current) {
       scrollTriggerRef.current.kill();
     }
@@ -78,28 +98,25 @@ const CategoryBanners = ({ products = [] }) => {
       animationRef.current.kill();
     }
 
-    // Reset position
     gsap.set(wrapper, { x: 0 });
 
     const totalScroll = wrapper.scrollWidth - window.innerWidth;
     
     if (totalScroll > 0) {
-      // Create the animation
       animationRef.current = gsap.to(wrapper, {
         x: -totalScroll,
         ease: 'none',
-        duration: totalScroll / 100, // Smooth duration based on scroll distance
+        duration: totalScroll / 100,
         scrollTrigger: {
           trigger: sectionRef.current,
           start: 'top top',
           end: `+=${wrapper.scrollWidth}`,
-          scrub: 0.8, // Smooth scrubbing both directions
+          scrub: 0.8,
           pin: true,
           pinSpacing: true,
           invalidateOnRefresh: true,
-          anticipatePin: 0,
+          anticipatePin: 1,
           onRefresh: (self) => {
-            // Recalculate on refresh
             const newTotal = wrapper.scrollWidth - window.innerWidth;
             if (newTotal !== totalScroll) {
               self.animation.vars.x = -newTotal;
@@ -112,7 +129,6 @@ const CategoryBanners = ({ products = [] }) => {
       scrollTriggerRef.current = animationRef.current.scrollTrigger;
     }
 
-    // Title animation - independent scroll trigger
     const titleTrigger = ScrollTrigger.create({
       trigger: titleRef.current,
       start: 'top 80%',
@@ -126,7 +142,6 @@ const CategoryBanners = ({ products = [] }) => {
       }
     });
 
-    // Cleanup function
     return () => {
       if (scrollTriggerRef.current) {
         scrollTriggerRef.current.kill();

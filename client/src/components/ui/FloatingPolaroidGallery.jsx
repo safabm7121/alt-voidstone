@@ -1,9 +1,10 @@
-// src/components/ui/FloatingPolaroidGallery.jsx
+// client/src/components/ui/FloatingPolaroidGallery.jsx
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useAuth } from '../../context/AuthContext';
+import { api } from '../../services/api';
 import { FiStar, FiX } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 
@@ -19,11 +20,13 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
   const navigate = useNavigate();
   const isAdmin = user?.email === 'voidstonestudio@gmail.com' || user?.role === 'admin';
 
+  // Fetch highlighted products from database
   useEffect(() => {
-    const saved = localStorage.getItem('highlightedProducts');
-    if (saved) {
-      try { setHighlightedIds(JSON.parse(saved)); } catch {}
-    }
+    api.get('/settings').then(res => {
+      if (res.data.settings?.highlightedProducts) {
+        setHighlightedIds(res.data.settings.highlightedProducts);
+      }
+    }).catch(() => {});
   }, []);
 
   const highlightedProducts = products.filter(p => highlightedIds.includes(p._id));
@@ -33,14 +36,12 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
   const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
 
   const handleProductClick = (productId) => {
-    // Kill all GSAP animations before navigation
     floatingTweensRef.current.forEach(t => {
       if (t && typeof t.kill === 'function') t.kill();
     });
     ScrollTrigger.getAll().forEach(trigger => {
       if (trigger && typeof trigger.kill === 'function') trigger.kill();
     });
-    // Navigate to product detail
     navigate(`/products/${productId}`);
     window.scrollTo(0, 0);
   };
@@ -48,7 +49,6 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
   useEffect(() => {
     if (!containerRef.current || displayProducts.length === 0) return;
 
-    // Kill old floating tweens
     floatingTweensRef.current.forEach(t => t && t.kill());
     floatingTweensRef.current = [];
 
@@ -206,19 +206,27 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
     );
   };
 
-  const saveHighlights = () => {
+  const saveHighlights = async () => {
     const newHighlights = [...new Set([...highlightedIds, ...selectedForHighlight])];
     setHighlightedIds(newHighlights);
-    localStorage.setItem('highlightedProducts', JSON.stringify(newHighlights));
+    try {
+      await api.put('/settings', { highlightedProducts: newHighlights });
+      toast.success('Highlights saved!');
+    } catch (err) {
+      toast.error('Failed to save');
+    }
     setSelectedForHighlight([]);
     setShowAdminPanel(false);
-    toast.success('Highlights saved!');
   };
 
-  const removeHighlight = (productId) => {
+  const removeHighlight = async (productId) => {
     const newHighlights = highlightedIds.filter(id => id !== productId);
     setHighlightedIds(newHighlights);
-    localStorage.setItem('highlightedProducts', JSON.stringify(newHighlights));
+    try {
+      await api.put('/settings', { highlightedProducts: newHighlights });
+    } catch (err) {
+      toast.error('Failed to remove');
+    }
   };
 
   const positions = [

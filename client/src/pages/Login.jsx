@@ -24,19 +24,19 @@ const Login = () => {
     return () => window.removeEventListener('mousemove', move);
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await login(email, password);
-      navigate('/');
-    } catch (err) {
-      setError(err.response?.data?.error || t('auth.loginFailed'));
-    } finally {
-      setLoading(false);
-    }
-  };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+  setLoading(true);
+  try {
+    await login(email, password);
+    // Use window.location to force a full navigation
+    window.location.href = '/';
+  } catch (err) {
+    setError(err.response?.data?.error || t('auth.loginFailed'));
+    setLoading(false);
+  }
+};
 
   const cardRef = useRef(null);
   const [spotlightPos, setSpotlightPos] = useState({ x: 50, y: 50 });

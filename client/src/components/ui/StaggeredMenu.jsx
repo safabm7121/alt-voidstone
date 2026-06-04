@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import './StaggeredMenu.css';
 
@@ -7,16 +7,17 @@ const StaggeredMenu = ({ isOpen, onClose, items, accentColor = '#5227FF' }) => {
   const layer1Ref = useRef(null);
   const layer2Ref = useRef(null);
   const itemsRef = useRef([]);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const panel = panelRef.current;
-    const layer1 = layer1Ref.current;
-    const layer2 = layer2Ref.current;
-    const itemEls = itemsRef.current.filter(Boolean);
-    
-    if (!panel || !layer1 || !layer2) return;
-
     if (isOpen) {
+      setVisible(true);
+      const panel = panelRef.current;
+      const layer1 = layer1Ref.current;
+      const layer2 = layer2Ref.current;
+      const itemEls = itemsRef.current.filter(Boolean);
+      if (!panel || !layer1 || !layer2) return;
+
       gsap.set([layer1, layer2, panel], { xPercent: 100 });
       gsap.set(itemEls, { y: 80, opacity: 0, rotate: 5 });
 
@@ -25,13 +26,29 @@ const StaggeredMenu = ({ isOpen, onClose, items, accentColor = '#5227FF' }) => {
       tl.to(layer2, { xPercent: 0, duration: 0.45, ease: 'power4.out' }, 0.06);
       tl.to(panel, { xPercent: 0, duration: 0.55, ease: 'power4.out' }, 0.1);
       tl.to(itemEls, { y: 0, opacity: 1, rotate: 0, duration: 0.7, ease: 'power4.out', stagger: 0.08 }, 0.25);
-    } else {
-      gsap.to(itemEls, { y: 30, opacity: 0, duration: 0.15, ease: 'power3.in' }, 0);
-      gsap.to([panel, layer1, layer2], { xPercent: 100, duration: 0.35, ease: 'power3.in' }, 0.05);
-    }
-  }, [isOpen]);
+      
+      return () => { tl.kill(); };
+    } else if (visible) {
+      const panel = panelRef.current;
+      const layer1 = layer1Ref.current;
+      const layer2 = layer2Ref.current;
+      const itemEls = itemsRef.current.filter(Boolean);
+      if (!panel || !layer1 || !layer2) {
+        setVisible(false);
+        return;
+      }
 
-  if (!isOpen) return null;
+      const tl = gsap.timeline({
+        onComplete: () => setVisible(false)
+      });
+      tl.to(itemEls, { y: 30, opacity: 0, duration: 0.1, ease: 'power3.in' }, 0);
+      tl.to([panel, layer1, layer2], { xPercent: 100, duration: 0.25, ease: 'power3.in' }, 0.02);
+      
+      return () => { tl.kill(); };
+    }
+  }, [isOpen, visible]);
+
+  if (!visible && !isOpen) return null;
 
   return (
     <div className="sm-overlay">
