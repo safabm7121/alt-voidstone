@@ -66,27 +66,22 @@ function App() {
           />
           <ScrollTriggerCleanup />
        <Routes>
-  {/* Public pages WITH Layout (Navbar + Footer) */}
   <Route element={<Layout />}>
     <Route index element={<Home />} />
-    
     <Route path="products/:id" element={<ProductDetail />} />
-    <Route path="cart" element={<Cart />} />
     <Route path="checkout" element={<Checkout />} />
-   
-    <Route path="wishlist" element={<Wishlist />} />
   </Route>
-  
-  {/* Auth pages WITHOUT Layout - no Navbar, no Home in background */}
+
+  {/* These now render independently with their own Navbar */}
+  <Route path="/products" element={<Products />} />
+  <Route path="/contact" element={<Contact />} />
+  <Route path="/cart" element={<Cart />} />
+  <Route path="/wishlist" element={<Wishlist />} />
   <Route path="/login" element={<Login />} />
-   <Route path="contact" element={<Contact />} />
-   <Route path="products" element={<Products />} />
   <Route path="/register" element={<Register />} />
   <Route path="/verify-email" element={<VerifyEmail />} />
   <Route path="/forgot-password" element={<ForgotPassword />} />
   <Route path="/reset-password" element={<ResetPassword />} />
-  
-  {/* Admin routes */}
   <Route path="/admin" element={<AdminDashboard />} />
   <Route path="/admin/create-product" element={<CreateProduct />} />
   <Route path="/admin/hero" element={<AdminHero />} />
