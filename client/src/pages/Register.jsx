@@ -5,8 +5,21 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { FiMail, FiLock, FiUser, FiEye, FiEyeOff } from 'react-icons/fi';
 
-const isTouchDevice = () => !window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+// Replace this:
+const [touchDevice, setTouchDevice] = useState(false);
+useEffect(() => {
+  setTouchDevice(isTouchDevice());
+}, []);
 
+// With this:
+const [touchDevice, setTouchDevice] = useState(true); // Default to true (safe for mobile)
+useEffect(() => {
+  try {
+    setTouchDevice(!window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+  } catch (e) {
+    setTouchDevice(true); // Fallback to touch mode
+  }
+}, []);
 const Register = () => {
   const { t } = useTranslation();
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '' });

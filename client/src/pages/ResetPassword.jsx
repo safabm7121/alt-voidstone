@@ -4,8 +4,21 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiMail, FiHash, FiLock, FiEye, FiEyeOff, FiArrowLeft } from 'react-icons/fi';
 
-const isTouchDevice = () => !window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+// Replace this:
+const [touchDevice, setTouchDevice] = useState(false);
+useEffect(() => {
+  setTouchDevice(isTouchDevice());
+}, []);
 
+// With this:
+const [touchDevice, setTouchDevice] = useState(true); // Default to true (safe for mobile)
+useEffect(() => {
+  try {
+    setTouchDevice(!window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+  } catch (e) {
+    setTouchDevice(true); // Fallback to touch mode
+  }
+}, []);
 const ResetPassword = () => {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
