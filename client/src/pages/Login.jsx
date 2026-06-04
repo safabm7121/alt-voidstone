@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 
+const isTouchDevice = () => !window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
 const Login = () => {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
@@ -14,32 +16,35 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
   const [mouseOnCard, setMouseOnCard] = useState(false);
+  const [spotlightPos, setSpotlightPos] = useState({ x: 50, y: 50 });
+  const [touchDevice, setTouchDevice] = useState(false);
+  const cardRef = useRef(null);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Cursor trail effect
   useEffect(() => {
+    setTouchDevice(isTouchDevice());
+  }, []);
+
+  useEffect(() => {
+    if (touchDevice) return;
     const move = (e) => setCursorPos({ x: e.clientX, y: e.clientY });
     window.addEventListener('mousemove', move);
     return () => window.removeEventListener('mousemove', move);
-  }, []);
+  }, [touchDevice]);
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
-  setLoading(true);
-  try {
-    await login(email, password);
-    // Use window.location to force a full navigation
-    window.location.href = '/';
-  } catch (err) {
-    setError(err.response?.data?.error || t('auth.loginFailed'));
-    setLoading(false);
-  }
-};
-
-  const cardRef = useRef(null);
-  const [spotlightPos, setSpotlightPos] = useState({ x: 50, y: 50 });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      await login(email, password);
+      window.location.href = '/';
+    } catch (err) {
+      setError(err.response?.data?.error || t('auth.loginFailed'));
+      setLoading(false);
+    }
+  };
 
   const handleCardMove = (e) => {
     const card = cardRef.current;
@@ -53,32 +58,34 @@ const handleSubmit = async (e) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-[#0a0a0a] relative overflow-hidden">
-      {/* Hide default cursor */}
-      <style>{`
-        body, * { cursor: none !important; }
-        a, button, [role="button"], input { cursor: none !important; }
-      `}</style>
+      {!touchDevice && (
+        <style>{`
+          body, * { cursor: none !important; }
+          a, button, [role="button"], input { cursor: none !important; }
+        `}</style>
+      )}
 
-      {/* Custom cursor trail - dot */}
-      <motion.div
-        className="fixed w-2 h-2 bg-white/80 rounded-full pointer-events-none z-[200]"
-        style={{ top: 0, left: 0 }}
-        animate={{ x: cursorPos.x - 4, y: cursorPos.y - 4 }}
-        transition={{ type: "tween", duration: 0.05 }}
-      />
-      {/* Custom cursor trail - ring */}
-      <motion.div
-        className="fixed w-6 h-6 border border-white/40 rounded-full pointer-events-none z-[200]"
-        style={{ top: 0, left: 0 }}
-        animate={{
-          x: cursorPos.x - 12,
-          y: cursorPos.y - 12,
-          scale: mouseOnCard ? 1.5 : 1,
-        }}
-        transition={{ type: "tween", duration: 0.08 }}
-      />
+      {!touchDevice && (
+        <>
+          <motion.div
+            className="fixed w-2 h-2 bg-white/80 rounded-full pointer-events-none z-[200]"
+            style={{ top: 0, left: 0 }}
+            animate={{ x: cursorPos.x - 4, y: cursorPos.y - 4 }}
+            transition={{ type: "tween", duration: 0.05 }}
+          />
+          <motion.div
+            className="fixed w-6 h-6 border border-white/40 rounded-full pointer-events-none z-[200]"
+            style={{ top: 0, left: 0 }}
+            animate={{
+              x: cursorPos.x - 12,
+              y: cursorPos.y - 12,
+              scale: mouseOnCard ? 1.5 : 1,
+            }}
+            transition={{ type: "tween", duration: 0.08 }}
+          />
+        </>
+      )}
 
-      {/* Noise texture */}
       <div className="fixed inset-0 opacity-[0.02] pointer-events-none z-10"
         style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.7\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'1\'/%3E%3C/svg%3E")' }}
       />
@@ -92,18 +99,19 @@ const handleSubmit = async (e) => {
         <div 
           ref={cardRef}
           className="relative border border-gray-800 bg-[#0f0f0f] p-8 overflow-hidden"
-          onMouseEnter={() => setMouseOnCard(true)}
-          onMouseLeave={() => setMouseOnCard(false)}
+          onMouseEnter={() => !touchDevice && setMouseOnCard(true)}
+          onMouseLeave={() => !touchDevice && setMouseOnCard(false)}
           onMouseMove={handleCardMove}
         >
-          {/* Subtle white spotlight - half opacity */}
-          <div 
-            className="absolute inset-0 pointer-events-none transition-opacity duration-300"
-            style={{
-              background: `radial-gradient(circle 200px at ${spotlightPos.x}% ${spotlightPos.y}%, rgba(255,255,255,0.05), transparent 70%)`,
-              opacity: mouseOnCard ? 1 : 0,
-            }}
-          />
+          {!touchDevice && (
+            <div 
+              className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+              style={{
+                background: `radial-gradient(circle 200px at ${spotlightPos.x}% ${spotlightPos.y}%, rgba(255,255,255,0.05), transparent 70%)`,
+                opacity: mouseOnCard ? 1 : 0,
+              }}
+            />
+          )}
 
           <div className="relative z-10">
             <div className="text-center mb-8">
@@ -145,7 +153,7 @@ const handleSubmit = async (e) => {
               </div>
 
               <button type="submit" disabled={loading}
-                className="w-full bg-[#ff6b35] text-black py-4 font-black text-lg uppercase tracking-[0.2em] border-2 border-[#ff6b35] hover:bg-transparent hover:text-[#ff6b35] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="w-full bg-[#ff6b35] text-black py-4 font-black text-lg uppercase tracking-[0.2em] border-2 border-[#ff6b35] hover:bg-transparent hover:text-[#ff6b35] transition-all duration-300 disabled:opacity-50">
                 {loading ? '...' : t('auth.login')}
               </button>
             </form>
