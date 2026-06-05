@@ -1,11 +1,21 @@
 import { motion } from 'framer-motion';
 import ProductCard from './ProductCard';
 
-const MasonryGrid = ({ products }) => (
-  <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+const MasonryGrid = ({ products, onDelete, onUpdate }) => (
+  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
     {products.map((product, i) => (
-      <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-        <ProductCard product={product} />
+      <motion.div 
+        key={product._id} 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ delay: i * 0.05 }}
+        className="h-full"
+      >
+        <ProductCard 
+          product={product} 
+          onDelete={onDelete} 
+          onUpdate={onUpdate} 
+        />
       </motion.div>
     ))}
   </div>

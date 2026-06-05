@@ -1,4 +1,3 @@
-// client/src/components/ui/FloatingPolaroidGallery.jsx
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
@@ -31,7 +30,9 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
 
   const highlightedProducts = products.filter(p => highlightedIds.includes(p._id));
   const otherProducts = products.filter(p => !highlightedIds.includes(p._id));
-  const displayProducts = [...highlightedProducts, ...otherProducts].slice(0, 5);
+  const displayProducts = highlightedIds.length >= 3 
+    ? highlightedProducts
+    : [...highlightedProducts, ...otherProducts].slice(0, 5);
 
   const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
 
@@ -208,15 +209,21 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
 
   const saveHighlights = async () => {
     const newHighlights = [...new Set([...highlightedIds, ...selectedForHighlight])];
-    setHighlightedIds(newHighlights);
-    try {
-      await api.put('/settings', { highlightedProducts: newHighlights });
-      toast.success('Highlights saved!');
-    } catch (err) {
-      toast.error('Failed to save');
+    
+    if (newHighlights.length < 3) {
+      toast.error('Select at least 3 products to highlight');
+      return;
     }
-    setSelectedForHighlight([]);
-    setShowAdminPanel(false);
+    
+    try {
+      const res = await api.put('/settings', { highlightedProducts: newHighlights });
+      setHighlightedIds(newHighlights);
+      setSelectedForHighlight([]);
+      setShowAdminPanel(false);
+      toast.success(`${newHighlights.length} products highlighted!`);
+    } catch (err) {
+      toast.error('Failed to save: ' + (err.response?.data?.error || err.message));
+    }
   };
 
   const removeHighlight = async (productId) => {
@@ -237,6 +244,8 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
     { bottom: '5%', right: '5%' },
   ];
 
+  const currentSelectionCount = [...new Set([...highlightedIds, ...selectedForHighlight])].length;
+
   return (
     <div className="relative">
       {isAdmin && (
@@ -254,23 +263,54 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
             <h3 className="font-semibold text-sm">Select to Highlight</h3>
             <button onClick={() => setShowAdminPanel(false)}><FiX className="w-4 h-4" /></button>
           </div>
-          <p className="text-xs text-gray-500 mb-3">Highlighted products appear first in the gallery</p>
+          <p className="text-xs text-gray-500 mb-3">
+            Choose 3-5 products to feature. Highlighted products appear first in the gallery.
+          </p>
           <div className="space-y-2 max-h-60 overflow-y-auto mb-3">
             {products.map(product => (
               <label key={product._id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-                <input type="checkbox"
+                <input
+                  type="checkbox"
                   checked={selectedForHighlight.includes(product._id) || highlightedIds.includes(product._id)}
-                  onChange={() => toggleHighlight(product._id)}
-                  disabled={highlightedIds.includes(product._id)} className="rounded" />
+                  onChange={() => {
+                    const isCurrentlySelected = selectedForHighlight.includes(product._id) || highlightedIds.includes(product._id);
+                    
+                    if (isCurrentlySelected) {
+                      if (selectedForHighlight.includes(product._id)) {
+                        toggleHighlight(product._id);
+                      } else if (highlightedIds.includes(product._id)) {
+                        removeHighlight(product._id);
+                      }
+                    } else {
+                      if (currentSelectionCount >= 5) {
+                        toast.error('Maximum 5 products can be highlighted');
+                        return;
+                      }
+                      toggleHighlight(product._id);
+                    }
+                  }}
+                  className="rounded"
+                />
                 <img src={product.images?.[0]} alt="" className="w-8 h-8 object-cover rounded" />
                 <span className="text-xs truncate flex-1">{product.name}</span>
                 {highlightedIds.includes(product._id) && (
-                  <button onClick={() => removeHighlight(product._id)} className="text-red-500 hover:text-red-700"><FiX className="w-3 h-3" /></button>
+                  <span className="text-[10px] text-purple-600 font-bold">✓</span>
                 )}
               </label>
             ))}
           </div>
-          <button onClick={saveHighlights} className="w-full bg-purple-600 text-white py-2 rounded-lg text-sm hover:bg-purple-700 transition">Save Highlights</button>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs text-gray-500">{currentSelectionCount} selected</span>
+            {currentSelectionCount < 3 && (
+              <span className="text-[10px] text-red-500">Min 3 required</span>
+            )}
+          </div>
+          <button 
+            onClick={saveHighlights} 
+            disabled={currentSelectionCount < 3}
+            className="w-full bg-purple-600 text-white py-2 rounded-lg text-sm hover:bg-purple-700 transition disabled:opacity-50">
+            Save Highlights {currentSelectionCount < 3 ? '(min 3)' : `(${currentSelectionCount})`}
+          </button>
         </div>
       )}
 
@@ -287,7 +327,7 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
           >
             <div className="bg-white p-3 pb-10 shadow-xl rotate-[-2deg] group-hover:rotate-0 group-hover:scale-110 group-hover:z-20 transition-all duration-500 relative">
               {highlightedIds.includes(product._id) && (
-                <div className="absolute -top-1 -right-1 z-10 bg-red-600 text-white rounded-full p-0.5 shadow"><FiStar className="w-3 h-3" /></div>
+                <div className="absolute -top-1 -right-1 z-10 bg-purple-600 text-white rounded-full p-0.5 shadow"><FiStar className="w-3 h-3" /></div>
               )}
               <div className="w-full aspect-[3/4] overflow-hidden bg-gray-100">
                 <img 

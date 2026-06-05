@@ -182,6 +182,7 @@ const FlowingRibbons = ({
   }, [removeWaveLine, backgroundColor, lineColor, animationSpeed]);
 
   useEffect(() => {
+    console.log('FlowingRibbons MOUNTED on page:', window.location.pathname);
     const canvas = canvasRef.current;
     if (!canvas) return;
     resizeCanvas();

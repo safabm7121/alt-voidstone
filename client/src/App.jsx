@@ -23,23 +23,18 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './index.css';
 import Wishlist from './pages/Wishlist';
 import AdminNewsletter from './pages/AdminNewsletter';
-// ...
-
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Component to clean up GSAP/ScrollTrigger on route changes
 const ScrollTriggerCleanup = () => {
   const location = useLocation();
   
   useEffect(() => {
-    // Kill all ScrollTriggers when navigating away
     ScrollTrigger.getAll().forEach(trigger => {
       if (trigger && typeof trigger.kill === 'function') {
         trigger.kill();
       }
     });
-    // Refresh ScrollTrigger to clean up any remaining references
     ScrollTrigger.refresh();
   }, [location]);
   
@@ -65,28 +60,27 @@ function App() {
             }}
           />
           <ScrollTriggerCleanup />
-       <Routes>
-  <Route element={<Layout />}>
-    <Route index element={<Home />} />
-    <Route path="products/:id" element={<ProductDetail />} />
-    <Route path="checkout" element={<Checkout />} />
-  </Route>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route index element={<Home />} />
+              <Route path="products/:id" element={<ProductDetail />} />
+              <Route path="checkout" element={<Checkout />} />
+            </Route>
 
-  {/* These now render independently with their own Navbar */}
-  <Route path="/products" element={<Products />} />
-  <Route path="/contact" element={<Contact />} />
-  <Route path="/cart" element={<Cart />} />
-  <Route path="/wishlist" element={<Wishlist />} />
-  <Route path="/login" element={<Login />} />
-  <Route path="/register" element={<Register />} />
-  <Route path="/verify-email" element={<VerifyEmail />} />
-  <Route path="/forgot-password" element={<ForgotPassword />} />
-  <Route path="/reset-password" element={<ResetPassword />} />
-  <Route path="/admin" element={<AdminDashboard />} />
-  <Route path="/admin/create-product" element={<CreateProduct />} />
-  <Route path="/admin/hero" element={<AdminHero />} />
-  <Route path="/admin/newsletter" element={<AdminNewsletter />} />
-</Routes>
+            <Route path="/products" element={<Products />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/create-product" element={<CreateProduct />} />
+            <Route path="/admin/hero" element={<AdminHero />} />
+            <Route path="/admin/newsletter" element={<AdminNewsletter />} />
+          </Routes>
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>
