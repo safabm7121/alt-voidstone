@@ -1,5 +1,7 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export default function Carousel3D({
   products = [],
@@ -11,14 +13,24 @@ export default function Carousel3D({
   width = 1200,
   height = 500,
 }) {
+  const navigate = useNavigate();
   const validProducts = products.filter((p) => p && p._id);
   const totalItems = Math.max(validProducts.length, 6);
   const spreadAngle = 360 / totalItems;
 
-  // If less than 6 products, duplicate them to fill the carousel
   const displayProducts = validProducts.length < 6
     ? [...Array(6)].map((_, i) => validProducts[i % validProducts.length])
     : validProducts;
+
+  const handleCardClick = (productId) => {
+    // Kill all GSAP animations and ScrollTriggers before navigating
+    ScrollTrigger.getAll().forEach(trigger => {
+      if (trigger && typeof trigger.kill === 'function') trigger.kill();
+    });
+    gsap.killTweensOf("*");
+    navigate(`/products/${productId}`);
+    window.scrollTo(0, 0);
+  };
 
   return (
     <div
@@ -89,10 +101,10 @@ export default function Carousel3D({
         {displayProducts.map((product, index) => {
           const angle = index * spreadAngle;
           return (
-            <Link
-              to={`/products/${product._id}`}
+            <div
               key={`${product._id}-${index}`}
               className="carousel-card"
+              onClick={() => handleCardClick(product._id)}
               style={{
                 width: imageWidth,
                 height: imageHeight,
@@ -111,7 +123,7 @@ export default function Carousel3D({
                 <p className="text-white font-semibold text-sm truncate">{product.name}</p>
                 <p className="text-gray-300 text-xs">{product.price} DT</p>
               </div>
-            </Link>
+            </div>
           );
         })}
       </div>
