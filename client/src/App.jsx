@@ -23,7 +23,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './index.css';
 import Wishlist from './pages/Wishlist';
 import AdminNewsletter from './pages/AdminNewsletter';
-
+import ScrollToTop from './components/common/ScrollToTop';
 gsap.registerPlugin(ScrollTrigger);
 
 const ScrollTriggerCleanup = () => {
@@ -60,6 +60,7 @@ function App() {
             }}
           />
           <ScrollTriggerCleanup />
+          <ScrollToTop />
           <Routes>
             <Route element={<Layout />}>
               <Route index element={<Home />} />
