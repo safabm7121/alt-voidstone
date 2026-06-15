@@ -182,8 +182,7 @@ const ProductDetail = () => {
   const [currentImage, setCurrentImage] = useState(0);
   const [thumbnailIndex, setThumbnailIndex] = useState(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
-  const [isHovering, setIsHovering] = useState(false);
+ 
   const [inWishlist, setInWishlist] = useState(false);
   const containerRef = useRef(null);
 
@@ -198,12 +197,7 @@ const ProductDetail = () => {
       .catch(() => {});
   }, [id]);
 
-  useEffect(() => {
-    const move = (e) => setCursorPos({ x: e.clientX, y: e.clientY });
-    window.addEventListener('mousemove', move);
-    return () => window.removeEventListener('mousemove', move);
-  }, []);
-
+ 
   useEffect(() => {
     if (!isAuthenticated || !product) return;
     api.get('/wishlist').then(res => {
@@ -288,23 +282,7 @@ const ProductDetail = () => {
 
   return (
     <div ref={containerRef} className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#ff6b35] selection:text-black">
-      <style>{`
-        body, * { cursor: none !important; }
-        a, button, [role="button"] { cursor: none !important; }
-      `}</style>
-      
-      <motion.div
-        className="fixed w-2 h-2 bg-[#ff6b35] rounded-full pointer-events-none z-[200]"
-        style={{ top: 0, left: 0 }}
-        animate={{ x: cursorPos.x - 4, y: cursorPos.y - 4 }}
-        transition={{ type: "tween", duration: 0.05 }}
-      />
-      <motion.div
-        className="fixed w-7 h-7 border border-[#ff6b35] rounded-full pointer-events-none z-[200]"
-        style={{ top: 0, left: 0 }}
-        animate={{ x: cursorPos.x - 14, y: cursorPos.y - 14, scale: isHovering ? 1.4 : 1 }}
-        transition={{ type: "tween", duration: 0.08 }}
-      />
+    
 
       <div className="fixed inset-0 opacity-[0.02] pointer-events-none z-10"
         style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.7\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'1\'/%3E%3C/svg%3E")' }}
