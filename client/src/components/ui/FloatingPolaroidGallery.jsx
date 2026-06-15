@@ -231,49 +231,50 @@ const FloatingPolaroidGallery = ({ products = [] }) => {
     };
   }, [displayProducts, windowWidth]);
 
-  const handleMouseEnter = (product, index) => {
-    if (!product.images || product.images.length <= 1) return;
-    
-    const extraImages = product.images.slice(1, 4);
-    const card = cardsRef.current[index];
-    if (!card) return;
+ const handleMouseEnter = (product, index) => {
+  if (!product.images || product.images.length <= 1) return;
+  
+  const extraImages = product.images.slice(1, 4);
+  const card = cardsRef.current[index];
+  if (!card) return;
 
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const cardRect = card.getBoundingClientRect();
-    const cardCenterX = cardRect.left + cardRect.width / 2 - containerRect.left;
-    const cardCenterY = cardRect.top + cardRect.height / 2 - containerRect.top;
+  const containerRect = containerRef.current.getBoundingClientRect();
+  const cardRect = card.getBoundingClientRect();
+  const cardCenterX = cardRect.left + cardRect.width / 2 - containerRect.left;
+  const cardCenterY = cardRect.top + cardRect.height / 2 - containerRect.top;
 
-    if (extraImagesRef.current[product._id]) {
-      extraImagesRef.current[product._id].forEach(el => el.remove());
-      extraImagesRef.current[product._id] = [];
-    }
-
+  if (extraImagesRef.current[product._id]) {
+    extraImagesRef.current[product._id].forEach(el => el.remove());
     extraImagesRef.current[product._id] = [];
+  }
 
-    const radius = isMobile ? 80 : 120;
-    const imgSize = isMobile ? 70 : 100;
+  extraImagesRef.current[product._id] = [];
 
-    extraImages.forEach((img, i) => {
-      const angle = (i / extraImages.length) * Math.PI * 2;
-      const x = cardCenterX + Math.cos(angle) * radius - imgSize/2;
-      const y = cardCenterY + Math.sin(angle) * radius - (imgSize * 1.3)/2;
+  // CHANGE THESE BACK TO ORIGINAL VALUES:
+  const radius = 120;
+  const imgSize = 100;
 
-      const el = document.createElement('div');
-      el.className = `absolute w-[${imgSize}px] h-[${imgSize * 1.3}px] bg-white p-2 pb-8 shadow-lg z-20 pointer-events-none`;
-      el.style.left = `${Math.max(5, Math.min(x, containerRect.width - imgSize - 5))}px`;
-      el.style.top = `${Math.max(5, Math.min(y, containerRect.height - (imgSize * 1.3) - 5))}px`;
-      el.style.transform = `rotate(${(Math.random() - 0.5) * 20}deg)`;
-      el.innerHTML = `<img src="${img}" class="w-full h-full object-cover" />`;
-      
-      containerRef.current.appendChild(el);
-      extraImagesRef.current[product._id].push(el);
+  extraImages.forEach((img, i) => {
+    const angle = (i / extraImages.length) * Math.PI * 2;
+    const x = cardCenterX + Math.cos(angle) * radius - imgSize/2;
+    const y = cardCenterY + Math.sin(angle) * radius - (imgSize * 1.3)/2;
 
-      gsap.fromTo(el, 
-        { opacity: 0, scale: 0, rotation: (Math.random() - 0.5) * 40 },
-        { opacity: 1, scale: 1, rotation: (Math.random() - 0.5) * 15, duration: 0.4, delay: i * 0.1, ease: 'back.out(1.7)' }
-      );
-    });
-  };
+    const el = document.createElement('div');
+    el.className = 'absolute w-[100px] h-[130px] bg-white p-2 pb-8 shadow-lg z-20 pointer-events-none';
+    el.style.left = `${Math.max(5, Math.min(x, containerRect.width - imgSize - 5))}px`;
+    el.style.top = `${Math.max(5, Math.min(y, containerRect.height - (imgSize * 1.3) - 5))}px`;
+    el.style.transform = `rotate(${(Math.random() - 0.5) * 20}deg)`;
+    el.innerHTML = `<img src="${img}" class="w-full h-full object-cover" />`;
+    
+    containerRef.current.appendChild(el);
+    extraImagesRef.current[product._id].push(el);
+
+    gsap.fromTo(el, 
+      { opacity: 0, scale: 0, rotation: (Math.random() - 0.5) * 40 },
+      { opacity: 1, scale: 1, rotation: (Math.random() - 0.5) * 15, duration: 0.4, delay: i * 0.1, ease: 'back.out(1.7)' }
+    );
+  });
+};
 
   const handleMouseLeave = (product) => {
     if (extraImagesRef.current[product._id]) {

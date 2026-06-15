@@ -11,8 +11,8 @@ import { toast } from 'react-hot-toast';
 function CardRotate({ children, onSendToBack, sensitivity = 200 }) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const rotateX = useTransform(y, [-100, 100], [60, -60]);
-  const rotateY = useTransform(x, [-100, 100], [-60, 60]);
+  const rotateX = useTransform(y, [-100, 100], [30, -30]);
+  const rotateY = useTransform(x, [-100, 100], [-30, 30]);
 
   function handleDragEnd(_, info) {
     if (Math.abs(info.offset.x) > sensitivity || Math.abs(info.offset.y) > sensitivity) {
@@ -25,7 +25,19 @@ function CardRotate({ children, onSendToBack, sensitivity = 200 }) {
 
   return (
     <motion.div
-      style={{ x, y, rotateX, rotateY, position: 'absolute', width: '100%', height: '100%', cursor: 'grab' }}
+      style={{ 
+        x, 
+        y, 
+        rotateX, 
+        rotateY, 
+        position: 'absolute', 
+        width: '100%', 
+        height: '100%', 
+        cursor: 'grab',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
       drag
       dragConstraints={{ top: 0, right: 0, bottom: 0, left: 0 }}
       dragElastic={0.6}
@@ -38,20 +50,21 @@ function CardRotate({ children, onSendToBack, sensitivity = 200 }) {
 }
 
 function ImageStack({ images, productName, onImageChange, externalIndex }) {
- const [stack, setStack] = useState(() =>
-  images.map((src, index) => ({
-    id: index,
-    src,
-    rotation: (Math.random() * 8 - 4).toFixed(2)
-  })).reverse() // ← ADD .reverse() HERE
-);
-useEffect(() => {
-  setStack(images.map((src, index) => ({
-    id: index,
-    src,
-    rotation: (Math.random() * 8 - 4).toFixed(2)
-  })).reverse()); // ← ADD .reverse() HERE
-}, [images]);
+  const [stack, setStack] = useState(() =>
+    images.map((src, index) => ({
+      id: index,
+      src,
+      rotation: (Math.random() * 8 - 4).toFixed(2)
+    })).reverse()
+  );
+
+  useEffect(() => {
+    setStack(images.map((src, index) => ({
+      id: index,
+      src,
+      rotation: (Math.random() * 8 - 4).toFixed(2)
+    })).reverse());
+  }, [images]);
 
   useEffect(() => {
     if (externalIndex !== null && externalIndex !== undefined) {
@@ -82,11 +95,28 @@ useEffect(() => {
     }
   }, [stack, onImageChange]);
 
+  // Check if mobile
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', perspective: '600px' }}>
+    <div style={{ 
+      position: 'relative', 
+      width: '100%', 
+      height: '100%', 
+      perspective: '600px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
       {stack.map((card, index) => {
         const isTop = index === stack.length - 1;
         const randomRotate = parseFloat(card.rotation);
+        // Mobile: reduce scale offset and rotation to keep cards centered
+        const scaleOffset = isMobile ? 0.03 : 0.06;
+        const rotationOffset = isMobile ? 2 : 4;
+        const transformOriginX = isMobile ? '50%' : '90%';
+        const transformOriginY = isMobile ? '50%' : '90%';
+        
         return (
           <CardRotate
             key={card.id}
@@ -104,9 +134,9 @@ useEffect(() => {
                 justifyContent: 'center',
               }}
               animate={{
-                rotateZ: (stack.length - index - 1) * 4 + randomRotate,
-                scale: 1 + index * 0.06 - stack.length * 0.06,
-                transformOrigin: '90% 90%'
+                rotateZ: (stack.length - index - 1) * rotationOffset + randomRotate,
+                scale: 1 + index * scaleOffset - stack.length * scaleOffset,
+                transformOrigin: `${transformOriginX} ${transformOriginY}`
               }}
               initial={false}
               transition={{
@@ -119,16 +149,16 @@ useEffect(() => {
                 <img
                   src={card.src}
                   alt={`${productName} ${card.id + 1}`}
-                  className="w-full h-full object-contain p-4"
+                  className="w-full h-full object-contain p-2 sm:p-4"
                   style={{ pointerEvents: 'none', userSelect: 'none' }}
                   draggable={false}
                 />
                 {isTop && (
                   <>
-                    <div className="absolute top-3 left-3 w-8 h-8 border-l-2 border-t-2 border-[#ff6b35] opacity-80 rounded-tl-xl" />
-                    <div className="absolute top-3 right-3 w-8 h-8 border-r-2 border-t-2 border-[#ff6b35] opacity-80 rounded-tr-xl" />
-                    <div className="absolute bottom-3 left-3 w-8 h-8 border-l-2 border-b-2 border-[#ff6b35] opacity-80 rounded-bl-xl" />
-                    <div className="absolute bottom-3 right-3 w-8 h-8 border-r-2 border-b-2 border-[#ff6b35] opacity-80 rounded-br-xl" />
+                    <div className="absolute top-2 sm:top-3 left-2 sm:left-3 w-5 sm:w-8 h-5 sm:h-8 border-l-2 border-t-2 border-[#ff6b35] opacity-80 rounded-tl-xl" />
+                    <div className="absolute top-2 sm:top-3 right-2 sm:right-3 w-5 sm:w-8 h-5 sm:h-8 border-r-2 border-t-2 border-[#ff6b35] opacity-80 rounded-tr-xl" />
+                    <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 w-5 sm:w-8 h-5 sm:h-8 border-l-2 border-b-2 border-[#ff6b35] opacity-80 rounded-bl-xl" />
+                    <div className="absolute bottom-2 sm:bottom-3 right-2 sm:right-3 w-5 sm:w-8 h-5 sm:h-8 border-r-2 border-b-2 border-[#ff6b35] opacity-80 rounded-br-xl" />
                   </>
                 )}
               </div>
@@ -139,6 +169,7 @@ useEffect(() => {
     </div>
   );
 }
+
 
 const ProductDetail = () => {
   const { id } = useParams();

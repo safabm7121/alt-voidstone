@@ -42,6 +42,7 @@ const ScrollTriggerCleanup = () => {
 };
 
 function App() {
+  
   return (
     <BrowserRouter>
       <AuthProvider>
