@@ -62,12 +62,65 @@ export const sendOrderEmails = async (orderData) => {
 };
 
 export const sendVerificationEmail = async (email, code, firstName) => {
-  await transporter.sendMail({
+  const info = await transporter.sendMail({
     from: `"Voidstone Studio" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Verify your email',
-    html: `<h1>Welcome ${firstName}</h1><p>Your code: <b>${code}</b></p>`
+    replyTo: process.env.EMAIL_USER,
+    subject: `Welcome to Voidstone Studio, ${firstName}`,
+    text: `Hi ${firstName},\n\nWelcome to Voidstone Studio!\n\nYour verification code is: ${code}\n\nEnter this code to activate your account.\n\nIf you did not create this account, you can ignore this email.\n\n— Voidstone Studio`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+      </head>
+      <body style="margin:0;padding:0;background-color:#0a0a0a;font-family:Arial,sans-serif;">
+        <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#0a0a0a;padding:40px 20px;">
+          <tr>
+            <td align="center">
+              <table width="600" cellspacing="0" cellpadding="0" border="0" style="background-color:#111111;border:1px solid #222222;">
+                <tr>
+                  <td style="padding:40px 40px 20px 40px;text-align:center;">
+                    <h1 style="color:#ffffff;font-size:24px;margin:0;letter-spacing:2px;text-transform:uppercase;">Voidstone Studio</h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:20px 40px;">
+                    <h2 style="color:#ffffff;font-size:20px;margin:0 0 20px 0;">Hi ${firstName},</h2>
+                    <p style="color:#cccccc;font-size:15px;line-height:1.6;margin:0 0 24px 0;">
+                      Thank you for joining Voidstone Studio. Please use the verification code below to activate your account:
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding:0 40px 30px 40px;">
+                    <div style="display:inline-block;padding:16px 32px;background-color:#0a0a0a;border:2px solid #ffffff;font-size:28px;font-weight:bold;color:#ffffff;letter-spacing:6px;font-family:'Courier New',monospace;">
+                      ${code}
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:20px 40px 40px 40px;">
+                    <p style="color:#888888;font-size:13px;line-height:1.6;margin:0;">
+                      If you did not create an account with Voidstone Studio, you can safely ignore this email.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:20px 40px;border-top:1px solid #222222;">
+                    <p style="color:#666666;font-size:12px;margin:0;text-align:center;">© 2024 Voidstone Studio. All rights reserved.</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `
   });
+  console.log('Verification email sent:', info.messageId, '→', email);
+  return info;
 };
 
 export const sendPasswordResetEmail = async (email, code, firstName) => {
