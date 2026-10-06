@@ -50,8 +50,13 @@ const VerifyEmail = () => {
         <div ref={cardRef} className="relative border border-gray-800 bg-[#0f0f0f] p-8 overflow-hidden" onMouseEnter={() => !touchDevice && setMouseOnCard(true)} onMouseLeave={() => !touchDevice && setMouseOnCard(false)} onMouseMove={handleCardMove}>
           {!touchDevice && <div className="absolute inset-0 pointer-events-none transition-opacity duration-300" style={{ background: `radial-gradient(circle 200px at ${spotlightPos.x}% ${spotlightPos.y}%, rgba(255,255,255,0.05), transparent 70%)`, opacity: mouseOnCard ? 1 : 0 }} />}
           <div className="relative z-10">
-            <div className="text-center mb-8"><h1 className="text-3xl font-black uppercase tracking-tighter text-white mb-2">Verify Email</h1><p className="text-gray-500 font-mono text-xs">Enter the code sent to your email</p></div>
-            {error && <div className="border border-red-500/30 text-red-400 px-4 py-3 mb-6 text-sm font-mono">{error}</div>}
+<div className="text-center mb-8">
+  <h1 className="text-3xl font-black uppercase tracking-tighter text-white mb-2">Verify Email</h1>
+  <p className="text-gray-500 font-mono text-xs">Enter the code sent to your email</p>
+  <p className="text-[#ff6b35] font-mono text-xs mt-3 leading-relaxed">
+    Didn't get it? Check your <span className="font-bold">Spam</span> folder and mark it as "Not Spam".
+  </p>
+</div>            {error && <div className="border border-red-500/30 text-red-400 px-4 py-3 mb-6 text-sm font-mono">{error}</div>}
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="relative"><FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" /><input type="email" required placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono" /></div>
               <div className="relative"><FiHash className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" /><input required placeholder="Verification Code" value={code} onChange={e => setCode(e.target.value.toUpperCase())} maxLength={8} className="w-full pl-10 pr-4 py-3 bg-[#111] border border-gray-800 text-white placeholder-gray-500 focus:border-[#ff6b35] focus:outline-none transition font-mono uppercase tracking-widest text-center text-lg" /></div>
